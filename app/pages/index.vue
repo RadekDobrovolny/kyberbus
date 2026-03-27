@@ -71,6 +71,7 @@
 import type { FeedItem } from "~/types/models";
 
 const auth = useAuth();
+const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const items = ref<FeedItem[]>([]);
 const nextCursor = ref<string | null>(null);
 const loading = ref(false);
@@ -86,7 +87,8 @@ const fetchFeed = async (cursor?: string) => {
       params.set("cursor", cursor);
     }
     const result = await $fetch<{ items: FeedItem[]; nextCursor: string | null }>(
-      `/api/feed?${params.toString()}`
+      `/api/feed?${params.toString()}`,
+      { headers: authHeaders }
     );
 
     if (!cursor) {

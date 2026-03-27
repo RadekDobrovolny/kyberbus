@@ -49,7 +49,8 @@
 
     <main class="relative mx-auto max-w-4xl px-4 pb-6 pt-24">
       <div
-        class="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[min(72vw,26rem)] -translate-x-1/2 overflow-hidden"
+        class="pointer-events-none absolute left-1/2 top-0 z-0 w-[min(72vw,26rem)] -translate-x-1/2 overflow-hidden"
+        style="height: max(100%, 1600px);"
         aria-hidden="true"
       >
         <svg class="h-full w-full" viewBox="0 0 360 2400" preserveAspectRatio="none">
@@ -65,9 +66,10 @@
             d="M180 0 C 134 220, 236 430, 180 650 C 126 870, 232 1080, 180 1300 C 132 1510, 236 1730, 180 1945 C 138 2125, 220 2280, 180 2400"
             fill="none"
             stroke="white"
-            stroke-dasharray="9 7"
+            stroke-dasharray="9 10.5"
             stroke-linecap="round"
             stroke-width="4"
+            vector-effect="non-scaling-stroke"
             opacity="0.8"
           />
         </svg>

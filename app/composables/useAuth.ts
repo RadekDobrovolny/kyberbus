@@ -4,6 +4,16 @@ export const useAuth = () => {
   const user = useState<AuthUser | null>("auth:user", () => null);
   const loaded = useState<boolean>("auth:loaded", () => false);
 
+  const fetchMe = () => {
+    if (import.meta.server) {
+      return $fetch<{ user: AuthUser | null }>("/api/auth/me", {
+        headers: useRequestHeaders(["cookie"])
+      });
+    }
+
+    return $fetch<{ user: AuthUser | null }>("/api/auth/me");
+  };
+
   const getErrorStatus = (error: any): number | null => {
     const status =
       error?.statusCode ?? error?.status ?? error?.response?.status ?? error?.data?.statusCode;
@@ -15,7 +25,7 @@ export const useAuth = () => {
     const wasLoaded = loaded.value;
 
     try {
-      const result = await $fetch<{ user: AuthUser | null }>("/api/auth/me");
+      const result = await fetchMe();
       user.value = result.user;
     } catch (error: any) {
       const status = getErrorStatus(error);

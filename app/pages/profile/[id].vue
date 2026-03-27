@@ -4,11 +4,20 @@
 
     <template v-else-if="profile">
       <div class="rounded-xl border border-stone-300 bg-white p-5 shadow-pin">
-        <div class="mb-4">
+        <div class="mb-4 flex items-stretch gap-3">
+          <NuxtLink
+            v-if="isOwnProfile"
+            to="/profile/edit"
+            class="inline-flex items-center justify-center gap-2 rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)] transition-transform hover:scale-[1.01]"
+          >
+            <PencilSquareIcon class="h-4 w-4" />
+            Upravit profil
+          </NuxtLink>
           <NuxtLink
             to="/"
-            class="inline-flex rounded border border-stone-300 bg-stone-100 px-3 py-1.5 text-sm font-semibold text-stone-800"
+            class="inline-flex items-center justify-center gap-2 rounded-full border border-stone-300 bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-800 shadow-pin transition-colors hover:bg-stone-200"
           >
+            <ArrowUturnLeftIcon class="h-4 w-4" />
             Zpět na feed
           </NuxtLink>
         </div>
@@ -22,13 +31,6 @@
             <h1 class="text-2xl font-black text-stone-900">{{ profile.shortName }}</h1>
             <p class="mt-2 whitespace-pre-wrap text-sm text-stone-700">{{ profile.bio }}</p>
             <p class="mt-2 text-sm font-medium text-stone-800">Kontakt: {{ profile.contact }}</p>
-            <NuxtLink
-              v-if="isOwnProfile"
-              to="/profile/edit"
-              class="mt-3 inline-flex rounded bg-accent-500 px-3 py-1.5 text-sm font-semibold text-white"
-            >
-              Upravit profil
-            </NuxtLink>
           </div>
         </div>
       </div>
@@ -50,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+import { ArrowUturnLeftIcon, PencilSquareIcon } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
 
 definePageMeta({
@@ -76,6 +79,7 @@ type ProfileResponse = {
 
 const route = useRoute();
 const auth = useAuth();
+const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const loading = ref(true);
 const profile = ref<ProfileResponse["profile"] | null>(null);
 const posts = ref<ProfileResponse["posts"]>([]);
@@ -97,7 +101,9 @@ const mappedPosts = computed<FeedItem[]>(() =>
 const mediaUrl = (path: string) => `/api/media/${path}`;
 
 try {
-  const result = await $fetch<ProfileResponse>(`/api/profile/${route.params.id}`);
+  const result = await $fetch<ProfileResponse>(`/api/profile/${route.params.id}`, {
+    headers: authHeaders
+  });
   profile.value = result.profile;
   posts.value = result.posts;
 } catch {
