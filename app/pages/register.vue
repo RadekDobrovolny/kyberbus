@@ -13,13 +13,13 @@
       </label>
 
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Krátké jméno</span>
-        <input v-model="shortName" class="w-full rounded border border-stone-300 p-2" maxlength="250" required />
-        <span class="mt-1 block text-xs text-stone-600">{{ shortName.length }} / 250</span>
+        <span class="mb-1 block font-medium text-stone-700">Jméno</span>
+        <input v-model="shortName" class="w-full rounded border border-stone-300 p-2" maxlength="30" required />
+        <span class="mt-1 block text-xs text-stone-600">{{ shortName.length }} / 30</span>
       </label>
 
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Bio</span>
+        <span class="mb-1 block font-medium text-stone-700">O mně</span>
         <textarea v-model="bio" class="min-h-20 w-full rounded border border-stone-300 p-2" maxlength="250" required />
         <span class="mt-1 block text-xs text-stone-600">{{ bio.length }} / 250</span>
       </label>
@@ -29,10 +29,10 @@
         <textarea
           v-model="contact"
           class="min-h-20 w-full rounded border border-stone-300 p-2"
-          maxlength="250"
+          maxlength="100"
           required
         />
-        <span class="mt-1 block text-xs text-stone-600">{{ contact.length }} / 250</span>
+        <span class="mt-1 block text-xs text-stone-600">{{ contact.length }} / 100</span>
       </label>
 
       <label class="block text-sm">
@@ -49,14 +49,31 @@
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
 
-      <button class="w-full rounded bg-accent-500 px-4 py-2 font-semibold text-white" :disabled="loading">
-        {{ loading ? "Vytvářím účet…" : "Registrovat se" }}
-      </button>
+      <div class="flex items-stretch gap-3 pt-1">
+        <button
+          type="submit"
+          class="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent-500 px-6 py-3 text-base font-semibold text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+          :disabled="loading"
+        >
+          <PaperAirplaneIcon class="h-5 w-5 -rotate-45" />
+          {{ loading ? "Vytvářím účet…" : "Registrovat se" }}
+        </button>
+
+        <NuxtLink
+          to="/login"
+          class="inline-flex items-center justify-center gap-2 rounded-full border border-stone-300 bg-stone-100 px-4 py-3 text-sm font-semibold text-stone-800 shadow-pin transition-colors hover:bg-stone-200"
+        >
+          <ArrowUturnLeftIcon class="h-4 w-4" />
+          Zpět
+        </NuxtLink>
+      </div>
     </form>
   </section>
 </template>
 
 <script setup lang="ts">
+import { ArrowUturnLeftIcon, PaperAirplaneIcon } from "@heroicons/vue/24/outline";
+
 definePageMeta({
   middleware: "guest"
 });
