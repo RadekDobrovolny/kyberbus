@@ -14,15 +14,16 @@ services:
       - "3000"
 
   caddy:
-    image: caddy:2.9-alpine
+    build:
+      context: ./caddy
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       - app
     ports:
-      - "80:80"
+      - "3004:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
 

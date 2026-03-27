@@ -36,7 +36,7 @@ Nuxt 3 aplikace podle `docs/prd.md`:
 1. Build a spuštění:
    - `docker compose up -d --build`
 2. Aplikace poběží přes Caddy na:
-   - `http://localhost`
+   - `http://localhost:3004`
 3. Volitelně Adminer na:
    - `http://localhost:8080`
 
