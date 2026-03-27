@@ -76,10 +76,12 @@ const items = ref<FeedItem[]>([]);
 const nextCursor = ref<string | null>(null);
 const loading = ref(false);
 const realtimeRefreshing = ref(false);
+const realtimePollMs = 5000;
 
 const editingPost = ref<FeedItem | null>(null);
 const editText = ref("");
 let feedStream: EventSource | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 const fetchFeed = async (cursor?: string) => {
   loading.value = true;
@@ -105,7 +107,7 @@ const fetchFeed = async (cursor?: string) => {
 };
 
 const refreshFromRealtime = async () => {
-  if (loading.value || realtimeRefreshing.value) {
+  if (loading.value || realtimeRefreshing.value || editingPost.value) {
     return;
   }
   realtimeRefreshing.value = true;
@@ -122,6 +124,23 @@ const closeFeedStream = () => {
   }
   feedStream.close();
   feedStream = null;
+};
+
+const stopRealtimePolling = () => {
+  if (!pollTimer) {
+    return;
+  }
+  clearInterval(pollTimer);
+  pollTimer = null;
+};
+
+const startRealtimePolling = () => {
+  if (!import.meta.client || pollTimer) {
+    return;
+  }
+  pollTimer = setInterval(() => {
+    void refreshFromRealtime();
+  }, realtimePollMs);
 };
 
 const startFeedStream = () => {
@@ -188,8 +207,10 @@ if (import.meta.client) {
     (id) => {
       if (id) {
         startFeedStream();
+        startRealtimePolling();
       } else {
         closeFeedStream();
+        stopRealtimePolling();
       }
     },
     { immediate: true }
@@ -197,6 +218,7 @@ if (import.meta.client) {
 
   onBeforeUnmount(() => {
     closeFeedStream();
+    stopRealtimePolling();
   });
 }
 </script>

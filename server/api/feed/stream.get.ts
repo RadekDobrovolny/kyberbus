@@ -4,6 +4,7 @@ import { registerFeedStream } from "~~/server/utils/feed-events";
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event);
+  console.info(`[feed-sse] connect user=${user.id}`);
   const stream = createEventStream(event);
 
   registerFeedStream(stream);
@@ -21,6 +22,7 @@ export default defineEventHandler(async (event) => {
 
   stream.onClosed(async () => {
     clearInterval(keepAlive);
+    console.info(`[feed-sse] disconnect user=${user.id}`);
     await stream.close();
   });
 

@@ -34,8 +34,10 @@ const pushWithTimeout = async (
 export const registerFeedStream = (stream: EventStream) => {
   const streams = getFeedStreams();
   streams.add(stream);
+  console.info(`[feed-sse] stream registered; active=${streams.size}`);
   stream.onClosed(() => {
     streams.delete(stream);
+    console.info(`[feed-sse] stream closed; active=${streams.size}`);
   });
 };
 
@@ -48,8 +50,10 @@ export const publishFeedUpdate = (kind: FeedUpdateKind, postId: string) => {
 
   const streams = getFeedStreams();
   if (streams.size === 0) {
+    console.info(`[feed-sse] publish ${kind} ${postId}; no active streams`);
     return;
   }
+  console.info(`[feed-sse] publish ${kind} ${postId}; streams=${streams.size}`);
 
   void (async () => {
     const streamList = Array.from(streams);
