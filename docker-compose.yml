@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SQLITE_PATH: /app/data/kyberbus.sqlite
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - sqlite_data:/app/data
+      - uploads_data:/app/uploads
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  adminer:
+    image: adminer:4.8.1
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - sqlite_data:/db
+
+volumes:
+  sqlite_data:
+  uploads_data:
+  caddy_data:
+  caddy_config:

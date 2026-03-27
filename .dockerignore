@@ -1,0 +1,8 @@
+.git
+.idea
+.nuxt
+.output
+node_modules
+data
+uploads
+*.sqlite
