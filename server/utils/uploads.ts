@@ -36,7 +36,7 @@ const isLikelyHeic = (meta?: SourceImageMeta) => {
   );
 };
 
-const require = createRequire(import.meta.url);
+const require = createRequire(resolve(process.cwd(), "package.json"));
 const heicConvert = require("heic-convert") as (params: {
   buffer: Buffer | Uint8Array;
   format: "JPEG" | "PNG";

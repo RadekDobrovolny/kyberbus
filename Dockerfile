@@ -1,11 +1,13 @@
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev \
+  && node -e "require('better-sqlite3'); require('sharp'); console.log('Native dependencies OK')"
 
 FROM node:20-bookworm-slim AS runtime
 WORKDIR /app

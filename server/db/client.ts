@@ -16,7 +16,7 @@ const ensureParentDir = (filePath: string) => {
   mkdirSync(dirname(filePath), { recursive: true });
 };
 
-const require = createRequire(import.meta.url);
+const require = createRequire(resolve(process.cwd(), "package.json"));
 const BetterSqlite3 = require("better-sqlite3") as any;
 
 const getSqliteFilePath = () => {
