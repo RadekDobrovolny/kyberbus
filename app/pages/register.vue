@@ -37,26 +37,13 @@
 
       <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Profilová fotka</span>
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-200"
-            @click="openCameraPicker"
-          >
-            <CameraIcon class="h-4 w-4" />
-            Pořídit snímek
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-200"
-            @click="openGalleryPicker"
-          >
-            <ArrowUpTrayIcon class="h-4 w-4" />
-            Nahrát z knihovny
-          </button>
-        </div>
-        <input ref="cameraInputRef" type="file" accept="image/*" capture="environment" class="hidden" @change="onFileChange" />
-        <input ref="galleryInputRef" type="file" accept="image/*" class="hidden" @change="onFileChange" />
+        <input
+          type="file"
+          accept="image/*"
+          class="w-full rounded border border-stone-300 p-2"
+          required
+          @change="onFileChange"
+        />
       </label>
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
@@ -85,9 +72,7 @@
 
 <script setup lang="ts">
 import {
-  ArrowUpTrayIcon,
   ArrowUturnLeftIcon,
-  CameraIcon,
   PaperAirplaneIcon
 } from "@heroicons/vue/24/outline";
 
@@ -102,8 +87,6 @@ const shortName = ref("");
 const bio = ref("");
 const contact = ref("");
 const profilePhoto = ref<File | null>(null);
-const cameraInputRef = ref<HTMLInputElement | null>(null);
-const galleryInputRef = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const error = ref("");
 
@@ -111,14 +94,6 @@ const onFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
   profilePhoto.value = input.files?.[0] || null;
   input.value = "";
-};
-
-const openCameraPicker = () => {
-  cameraInputRef.value?.click();
-};
-
-const openGalleryPicker = () => {
-  galleryInputRef.value?.click();
 };
 
 const submit = async () => {
