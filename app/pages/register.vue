@@ -40,7 +40,6 @@
         <input
           type="file"
           accept="image/*"
-          capture="environment"
           class="w-full rounded border border-stone-300 p-2"
           required
           @change="onFileChange"

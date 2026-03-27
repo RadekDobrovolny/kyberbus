@@ -14,6 +14,8 @@ type SourceImageMeta = {
   fileName?: string;
 };
 
+const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".avif"];
+
 const resolveUploadsDir = () => {
   const runtime = useRuntimeConfig();
   return resolve(process.cwd(), runtime.uploadsDir);
@@ -53,10 +55,22 @@ const convertHeicToJpeg = async (buffer: Buffer) => {
 };
 
 export const validateImageInput = (meta?: SourceImageMeta) => {
-  const mime = meta?.mimeType?.toLowerCase() || "";
-  if (!mime.startsWith("image/")) {
-    throw createError({ statusCode: 400, statusMessage: "Nahraj obrázek." });
+  const mime = (meta?.mimeType || "").toLowerCase().trim();
+  const fileName = (meta?.fileName || "").toLowerCase().trim();
+
+  if (mime.startsWith("image/")) {
+    return;
   }
+
+  const isUnknownBinary =
+    mime === "" || mime === "application/octet-stream" || mime === "binary/octet-stream";
+  const hasImageExtension = IMAGE_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+
+  if (isUnknownBinary && hasImageExtension) {
+    return;
+  }
+
+  throw createError({ statusCode: 400, statusMessage: "Nahraj obrázek." });
 };
 
 export const processAndStoreImage = async (

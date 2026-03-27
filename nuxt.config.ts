@@ -4,6 +4,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxtjs/tailwindcss"],
   css: ["~~/assets/css/tailwind.css"],
+  app: {
+    head: {
+      viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    }
+  },
   runtimeConfig: {
     sessionCookieName: "kyberbus_session",
     sessionMaxAgeSeconds: 60 * 60 * 24 * 7,

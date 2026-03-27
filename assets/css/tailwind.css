@@ -12,6 +12,14 @@ body {
   @apply bg-stone-100 text-stone-900;
 }
 
+@layer base {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 .gloria-hallelujah-regular {
   font-family: "Gloria Hallelujah", cursive;
   font-weight: 400;

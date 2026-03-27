@@ -22,7 +22,7 @@
 
       <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Nová profilová fotka (volitelné)</span>
-        <input type="file" accept="image/*" capture="environment" class="w-full rounded border border-stone-300 p-2" @change="onFileChange" />
+        <input type="file" accept="image/*" class="w-full rounded border border-stone-300 p-2" @change="onFileChange" />
       </label>
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
