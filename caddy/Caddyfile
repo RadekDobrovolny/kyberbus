@@ -1,4 +1,11 @@
 :80 {
+  @sse path /api/feed/stream
+  handle @sse {
+    reverse_proxy app:3000 {
+      flush_interval -1
+    }
+  }
+
   encode gzip zstd
   reverse_proxy app:3000
 }

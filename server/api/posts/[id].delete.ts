@@ -39,6 +39,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  await publishFeedUpdate("deleted", postId);
+  publishFeedUpdate("deleted", postId);
   return { ok: true };
 });

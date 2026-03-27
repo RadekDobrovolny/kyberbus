@@ -49,6 +49,6 @@ export default defineEventHandler(async (event) => {
     })
     .where(and(eq(posts.id, postId), eq(posts.authorId, user.id)));
 
-  await publishFeedUpdate("updated", postId);
+  publishFeedUpdate("updated", postId);
   return { ok: true };
 });

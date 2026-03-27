@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
       updatedAt: ts
     });
 
-    await publishFeedUpdate("created", postId);
+    publishFeedUpdate("created", postId);
     return { ok: true, id: postId };
   }
 
@@ -89,7 +89,7 @@ export default defineEventHandler(async (event) => {
       updatedAt: ts
     });
 
-    await publishFeedUpdate("created", postId);
+    publishFeedUpdate("created", postId);
     return { ok: true, id: postId };
   }
 

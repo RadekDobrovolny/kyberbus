@@ -14,6 +14,23 @@ const getFeedStreams = () => {
   return globalThis.__kyberbusFeedStreams;
 };
 
+const pushWithTimeout = async (
+  stream: EventStream,
+  data: string,
+  timeoutMs = 1500
+) => {
+  const pushTask = stream
+    .push({ event: "feed-update", data })
+    .then(() => true)
+    .catch(() => false);
+
+  const timeoutTask = new Promise<boolean>((resolve) => {
+    setTimeout(() => resolve(false), timeoutMs);
+  });
+
+  return Promise.race([pushTask, timeoutTask]);
+};
+
 export const registerFeedStream = (stream: EventStream) => {
   const streams = getFeedStreams();
   streams.add(stream);
@@ -22,7 +39,7 @@ export const registerFeedStream = (stream: EventStream) => {
   });
 };
 
-export const publishFeedUpdate = async (kind: FeedUpdateKind, postId: string) => {
+export const publishFeedUpdate = (kind: FeedUpdateKind, postId: string) => {
   const payload = JSON.stringify({
     kind,
     postId,
@@ -34,18 +51,20 @@ export const publishFeedUpdate = async (kind: FeedUpdateKind, postId: string) =>
     return;
   }
 
-  const failed: EventStream[] = [];
-  await Promise.all(
-    Array.from(streams).map(async (stream) => {
-      try {
-        await stream.push({ event: "feed-update", data: payload });
-      } catch {
-        failed.push(stream);
-      }
-    })
-  );
+  void (async () => {
+    const streamList = Array.from(streams);
+    const results = await Promise.all(
+      streamList.map((stream) => pushWithTimeout(stream, payload))
+    );
 
-  for (const stream of failed) {
-    streams.delete(stream);
-  }
+    for (let i = 0; i < streamList.length; i++) {
+      const stream = streamList[i];
+      if (!stream) {
+        continue;
+      }
+      if (!results[i]) {
+        streams.delete(stream);
+      }
+    }
+  })();
 };
