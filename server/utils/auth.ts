@@ -10,6 +10,30 @@ const now = () => Date.now();
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 
+const resolveSessionCookieSecure = (event: H3Event, runtime: ReturnType<typeof useRuntimeConfig>) => {
+  const raw = String(runtime.sessionCookieSecure || "auto").toLowerCase();
+  if (raw === "true" || raw === "1" || raw === "yes") {
+    return true;
+  }
+  if (raw === "false" || raw === "0" || raw === "no") {
+    return false;
+  }
+
+  const header = event.node.req.headers["x-forwarded-proto"];
+  const forwardedProto = Array.isArray(header) ? header[0] : header;
+  if (typeof forwardedProto === "string") {
+    const first = forwardedProto.split(",")[0]?.trim().toLowerCase();
+    if (first === "https") {
+      return true;
+    }
+    if (first === "http") {
+      return false;
+    }
+  }
+
+  return Boolean((event.node.req.socket as { encrypted?: boolean }).encrypted);
+};
+
 export const createSession = async (event: H3Event, userId: string) => {
   ensureSchema();
   const db = getDb();
@@ -29,7 +53,7 @@ export const createSession = async (event: H3Event, userId: string) => {
   setCookie(event, runtime.sessionCookieName, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: resolveSessionCookieSecure(event, runtime),
     maxAge: runtime.sessionMaxAgeSeconds,
     path: "/"
   });

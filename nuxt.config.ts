@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     sessionCookieName: "kyberbus_session",
     sessionMaxAgeSeconds: 60 * 60 * 24 * 7,
+    sessionCookieSecure: process.env.SESSION_COOKIE_SECURE || "auto",
     sqlitePath: process.env.SQLITE_PATH || "./data/kyberbus.sqlite",
     uploadsDir: process.env.UPLOADS_DIR || "./uploads",
     public: {
