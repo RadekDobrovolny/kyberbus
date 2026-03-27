@@ -4,6 +4,7 @@ import { existsSync, unlinkSync } from "node:fs";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { publishFeedUpdate } from "~~/server/utils/feed-events";
 import { getAbsoluteUploadPath } from "~~/server/utils/uploads";
 
 export default defineEventHandler(async (event) => {
@@ -38,5 +39,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  await publishFeedUpdate("deleted", postId);
   return { ok: true };
 });

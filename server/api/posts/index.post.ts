@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { publishFeedUpdate } from "~~/server/utils/feed-events";
 import { processAndStoreImage, validateImageInput } from "~~/server/utils/uploads";
 import { createInstaxSchema, createLepikSchema } from "~~/server/utils/validation";
 
@@ -61,6 +62,7 @@ export default defineEventHandler(async (event) => {
       updatedAt: ts
     });
 
+    await publishFeedUpdate("created", postId);
     return { ok: true, id: postId };
   }
 
@@ -87,6 +89,7 @@ export default defineEventHandler(async (event) => {
       updatedAt: ts
     });
 
+    await publishFeedUpdate("created", postId);
     return { ok: true, id: postId };
   }
 

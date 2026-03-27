@@ -4,6 +4,7 @@ import { getRouterParam } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { publishFeedUpdate } from "~~/server/utils/feed-events";
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event);
@@ -48,5 +49,6 @@ export default defineEventHandler(async (event) => {
     })
     .where(and(eq(posts.id, postId), eq(posts.authorId, user.id)));
 
+  await publishFeedUpdate("updated", postId);
   return { ok: true };
 });

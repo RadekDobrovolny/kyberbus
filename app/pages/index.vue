@@ -75,9 +75,11 @@ const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefin
 const items = ref<FeedItem[]>([]);
 const nextCursor = ref<string | null>(null);
 const loading = ref(false);
+const realtimeRefreshing = ref(false);
 
 const editingPost = ref<FeedItem | null>(null);
 const editText = ref("");
+let feedStream: EventSource | null = null;
 
 const fetchFeed = async (cursor?: string) => {
   loading.value = true;
@@ -100,6 +102,40 @@ const fetchFeed = async (cursor?: string) => {
   } finally {
     loading.value = false;
   }
+};
+
+const refreshFromRealtime = async () => {
+  if (loading.value || realtimeRefreshing.value) {
+    return;
+  }
+  realtimeRefreshing.value = true;
+  try {
+    await fetchFeed();
+  } finally {
+    realtimeRefreshing.value = false;
+  }
+};
+
+const closeFeedStream = () => {
+  if (!feedStream) {
+    return;
+  }
+  feedStream.close();
+  feedStream = null;
+};
+
+const startFeedStream = () => {
+  if (!import.meta.client || feedStream) {
+    return;
+  }
+
+  feedStream = new EventSource("/api/feed/stream");
+  feedStream.addEventListener("feed-update", () => {
+    void refreshFromRealtime();
+  });
+  feedStream.onerror = () => {
+    // Browser se pokusí o reconnect automaticky.
+  };
 };
 
 const loadMore = async () => {
@@ -144,5 +180,23 @@ if (!auth.loaded.value) {
 }
 if (auth.user.value) {
   await fetchFeed();
+}
+
+if (import.meta.client) {
+  watch(
+    () => auth.user.value?.id,
+    (id) => {
+      if (id) {
+        startFeedStream();
+      } else {
+        closeFeedStream();
+      }
+    },
+    { immediate: true }
+  );
+
+  onBeforeUnmount(() => {
+    closeFeedStream();
+  });
 }
 </script>
