@@ -24,7 +24,7 @@ const getSqliteFilePath = () => {
   return resolve(process.cwd(), runtime.sqlitePath);
 };
 
-const isDuplicateRoleColumnError = (error: unknown): boolean => {
+const isDuplicateColumnError = (error: unknown, columnName: string): boolean => {
   const visited = new Set<unknown>();
   let current: unknown = error;
 
@@ -32,7 +32,7 @@ const isDuplicateRoleColumnError = (error: unknown): boolean => {
     visited.add(current);
 
     const message = current instanceof Error ? current.message : String(current);
-    if (message.toLowerCase().includes("duplicate column name: role")) {
+    if (message.toLowerCase().includes(`duplicate column name: ${columnName.toLowerCase()}`)) {
       return true;
     }
 
@@ -83,7 +83,7 @@ export const ensureSchema = () => {
   try {
     db.run(sql`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'USER';`);
   } catch (error) {
-    if (!isDuplicateRoleColumnError(error)) {
+    if (!isDuplicateColumnError(error, "role")) {
       throw error;
     }
   }
@@ -118,6 +118,7 @@ export const ensureSchema = () => {
       id TEXT PRIMARY KEY NOT NULL,
       author_id TEXT NOT NULL,
       type TEXT NOT NULL,
+      notice_level TEXT NOT NULL DEFAULT 'INFO',
       text_content TEXT NOT NULL,
       image_path TEXT,
       created_at INTEGER NOT NULL,
@@ -127,6 +128,15 @@ export const ensureSchema = () => {
   `);
   db.run(sql`CREATE INDEX IF NOT EXISTS posts_created_at_idx ON posts(created_at);`);
   db.run(sql`CREATE INDEX IF NOT EXISTS posts_author_id_idx ON posts(author_id);`);
+  try {
+    db.run(sql`ALTER TABLE posts ADD COLUMN notice_level TEXT NOT NULL DEFAULT 'INFO';`);
+  } catch (error) {
+    if (!isDuplicateColumnError(error, "notice_level")) {
+      throw error;
+    }
+  }
+  db.run(sql`UPDATE posts SET notice_level = 'INFO' WHERE notice_level IS NULL OR notice_level = '';`);
+  db.run(sql`UPDATE posts SET notice_level = 'INFO' WHERE notice_level NOT IN ('INFO', 'IMPORTANT');`);
 
   db.run(sql`
     CREATE TABLE IF NOT EXISTS post_reactions (

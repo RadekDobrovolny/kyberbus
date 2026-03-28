@@ -38,6 +38,7 @@ export const posts = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: text("type", { enum: ["INSTAX", "LEPIK", "DISPECINK", "MESTO"] }).notNull(),
+    noticeLevel: text("notice_level", { enum: ["INFO", "IMPORTANT"] }).notNull().default("INFO"),
     textContent: text("text_content").notNull(),
     imagePath: text("image_path"),
     createdAt: integer("created_at").notNull(),

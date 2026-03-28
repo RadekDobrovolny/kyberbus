@@ -1,8 +1,17 @@
 export const USER_ROLES = ["USER", "ADMIN"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+export const NOTICE_LEVELS = ["INFO", "IMPORTANT"] as const;
+export type NoticeLevel = (typeof NOTICE_LEVELS)[number];
+
 export const isUserRole = (value: unknown): value is UserRole =>
   typeof value === "string" && USER_ROLES.includes(value as UserRole);
+
+export const isNoticeLevel = (value: unknown): value is NoticeLevel =>
+  typeof value === "string" && NOTICE_LEVELS.includes(value as NoticeLevel);
+
+export const normalizeNoticeLevel = (value: unknown): NoticeLevel =>
+  value === "IMPORTANT" ? "IMPORTANT" : "INFO";
 
 export const normalizeUserRole = (value: unknown): UserRole =>
   value === "ADMIN" ? "ADMIN" : "USER";
@@ -21,8 +30,8 @@ export const POST_TYPE_CONFIG = {
     adminOnly: false
   },
   DISPECINK: {
-    label: "Dispečink",
-    maxLength: 200,
+    label: "Oznámení",
+    maxLength: 500,
     requiresImage: false,
     adminOnly: true
   },

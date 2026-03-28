@@ -36,7 +36,7 @@
           @click="type = 'DISPECINK'"
         >
           <MegaphoneIcon class="h-4 w-4" />
-          Dispečink
+          Oznámení
         </button>
         <button
           v-if="isAdmin"
@@ -77,6 +77,32 @@
           </button>
         </div>
       </template>
+
+      <div v-if="type === 'DISPECINK'" class="space-y-2">
+        <span class="block text-sm font-medium text-stone-700">Úroveň</span>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+            :class="noticeLevel === 'INFO'
+              ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
+              : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
+            @click="noticeLevel = 'INFO'"
+          >
+            Info
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+            :class="noticeLevel === 'IMPORTANT'
+              ? 'bg-red-600 text-white shadow-[0_10px_20px_rgba(220,38,38,0.35)]'
+              : 'border border-red-300 bg-red-50 text-red-700 hover:bg-red-100'"
+            @click="noticeLevel = 'IMPORTANT'"
+          >
+            Důležité
+          </button>
+        </div>
+      </div>
 
       <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Text</span>
@@ -127,6 +153,7 @@ import {
   getPostMaxLength,
   isPostType,
   postTypeRequiresImage,
+  type NoticeLevel,
   type PostType
 } from "~~/shared/content";
 
@@ -143,6 +170,7 @@ const isAdmin = computed(() => auth.user.value?.role === "ADMIN");
 const userRole = computed(() => auth.user.value?.role || "USER");
 const type = ref<PostType>("INSTAX");
 const textContent = ref("");
+const noticeLevel = ref<NoticeLevel>("INFO");
 const imageFile = ref<File | null>(null);
 const imagePreviewUrl = ref<string | null>(null);
 const HEIC_MIME_TYPES = new Set([
@@ -175,6 +203,9 @@ watch(type, () => {
     imageFile.value = null;
     resetPreviewUrl();
     imageRotationQuarterTurns.value = 0;
+  }
+  if (type.value !== "DISPECINK") {
+    noticeLevel.value = "INFO";
   }
 });
 
@@ -265,6 +296,9 @@ const submit = async () => {
     const form = new FormData();
     form.append("type", type.value);
     form.append("textContent", textContent.value);
+    if (type.value === "DISPECINK") {
+      form.append("noticeLevel", noticeLevel.value);
+    }
     if (showImageField.value && imageFile.value) {
       form.append("image", imageFile.value);
       if (imageRotationQuarterTurns.value !== 0) {

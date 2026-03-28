@@ -51,6 +51,48 @@
         </div>
       </template>
 
+      <template v-else-if="isAnnouncement">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
+            <img
+              :src="mediaUrl(item.authorPhotoPath)"
+              alt="Profil autora"
+              class="h-9 w-9 rounded-full border border-stone-300 object-cover"
+            />
+            <span class="font-semibold text-stone-800">{{ item.authorShortName }}</span>
+          </NuxtLink>
+          <span class="text-xs text-stone-600">{{ formatDate(item.createdAt) }}</span>
+        </div>
+        <div
+          class="flex items-center gap-3 rounded-lg border px-4 py-3"
+          :class="isImportantAnnouncement
+            ? 'border-red-300 bg-red-50'
+            : 'border-stone-300 bg-stone-50'"
+        >
+          <div
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+            :class="isImportantAnnouncement
+              ? 'border-red-300 bg-red-100'
+              : 'border-stone-300 bg-white'"
+          >
+            <span
+              v-if="isImportantAnnouncement"
+              class="text-xl font-black leading-none text-red-600"
+              aria-hidden="true"
+            >
+              !
+            </span>
+            <MegaphoneIcon v-else class="h-5 w-5 text-stone-700" />
+          </div>
+          <p
+            class="min-w-0 flex-1 whitespace-pre-wrap font-mono text-[1rem] leading-relaxed"
+            :class="isImportantAnnouncement ? 'text-red-950' : 'text-stone-800'"
+          >
+            {{ item.textContent }}
+          </p>
+        </div>
+      </template>
+
       <template v-else>
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
@@ -133,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { PencilSquareIcon, TrashIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { MegaphoneIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
 import {
   createEmptyReactionCounts,
@@ -156,7 +198,11 @@ defineEmits<{
 
 const isLepik = computed(() => props.item.type === "LEPIK");
 const isInstax = computed(() => props.item.type === "INSTAX");
+const isAnnouncement = computed(() => props.item.type === "DISPECINK");
 const isMesto = computed(() => props.item.type === "MESTO");
+const isImportantAnnouncement = computed(
+  () => isAnnouncement.value && props.item.noticeLevel === "IMPORTANT"
+);
 const isImageModalOpen = ref(false);
 const reactionButtons: Array<{ type: ReactionType; key: ReactionKey; emoji: string }> = [
   { type: "HEART", key: "heart", emoji: "❤️" },
@@ -247,6 +293,9 @@ const cardClass = computed(() => {
   }
   if (isMesto.value) {
     return "relative mx-auto mb-20 w-full max-w-[30rem] overflow-hidden rounded-xl border border-stone-300 bg-white p-2 shadow-[0_14px_24px_rgba(0,0,0,0.14),0_3px_10px_rgba(0,0,0,0.1)]";
+  }
+  if (isAnnouncement.value) {
+    return "relative mx-auto mb-20 w-full max-w-[34rem] overflow-hidden rounded-xl border border-stone-300 bg-white p-4 shadow-[0_14px_24px_rgba(0,0,0,0.14),0_3px_10px_rgba(0,0,0,0.1)]";
   }
 
   return `relative mx-auto mb-20 flex aspect-square w-full max-w-[22rem] flex-col overflow-hidden rounded-sm border border-stone-300/80 p-4 transition-transform duration-200 hover:scale-[1.01] ${lepikColorClass.value}`;

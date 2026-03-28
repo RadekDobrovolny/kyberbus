@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
     .select({
       id: posts.id,
       type: posts.type,
+      noticeLevel: posts.noticeLevel,
       textContent: posts.textContent,
       imagePath: posts.imagePath,
       createdAt: posts.createdAt,

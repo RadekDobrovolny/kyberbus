@@ -1,3 +1,4 @@
+import type { NoticeLevel } from "~~/shared/content";
 import type { ReactionCounts, ViewerReactions } from "~~/shared/reactions";
 
 export type AuthUser = {
@@ -14,6 +15,7 @@ export type AuthUser = {
 export type FeedItem = {
   id: string;
   type: "INSTAX" | "LEPIK" | "DISPECINK" | "MESTO";
+  noticeLevel: NoticeLevel;
   textContent: string;
   imagePath: string | null;
   createdAt: number;

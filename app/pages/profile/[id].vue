@@ -101,6 +101,7 @@ type ProfileResponse = {
   posts: Array<{
     id: string;
     type: "INSTAX" | "LEPIK" | "DISPECINK" | "MESTO";
+    noticeLevel: "INFO" | "IMPORTANT";
     textContent: string;
     imagePath: string | null;
     createdAt: number;

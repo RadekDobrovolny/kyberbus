@@ -35,6 +35,32 @@
         </div>
       </template>
 
+      <div v-if="isAnnouncement" class="space-y-2">
+        <span class="block text-sm font-medium text-stone-700">Úroveň</span>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+            :class="noticeLevel === 'INFO'
+              ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
+              : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
+            @click="noticeLevel = 'INFO'"
+          >
+            Info
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+            :class="noticeLevel === 'IMPORTANT'
+              ? 'bg-red-600 text-white shadow-[0_10px_20px_rgba(220,38,38,0.35)]'
+              : 'border border-red-300 bg-red-50 text-red-700 hover:bg-red-100'"
+            @click="noticeLevel = 'IMPORTANT'"
+          >
+            Důležité
+          </button>
+        </div>
+      </div>
+
       <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Text</span>
         <textarea
@@ -72,7 +98,7 @@
 <script setup lang="ts">
 import { ArrowPathIcon, ArrowUturnLeftIcon, PaperAirplaneIcon } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
-import { getPostMaxLength } from "~~/shared/content";
+import { getPostMaxLength, type NoticeLevel } from "~~/shared/content";
 
 definePageMeta({
   middleware: "auth"
@@ -86,10 +112,12 @@ const saving = ref(false);
 const error = ref("");
 const post = ref<FeedItem | null>(null);
 const textContent = ref("");
+const noticeLevel = ref<NoticeLevel>("INFO");
 const imageRotationQuarterTurns = ref(0);
 
 const postId = computed(() => String(route.params.id || ""));
 const isInstax = computed(() => post.value?.type === "INSTAX");
+const isAnnouncement = computed(() => post.value?.type === "DISPECINK");
 const maxLen = computed(() => (post.value ? getPostMaxLength(post.value.type) : 200));
 const imageRotationDegrees = computed(() => imageRotationQuarterTurns.value * 90);
 const typeLabel = computed(() => {
@@ -100,7 +128,7 @@ const typeLabel = computed(() => {
     return "Lepík";
   }
   if (post.value.type === "DISPECINK") {
-    return "Dispečink";
+    return "Oznámení";
   }
   if (post.value.type === "MESTO") {
     return "Město";
@@ -122,6 +150,7 @@ const load = async () => {
     });
     post.value = result.post;
     textContent.value = result.post.textContent;
+    noticeLevel.value = result.post.noticeLevel;
     imageRotationQuarterTurns.value = 0;
   } catch (err: any) {
     post.value = null;
@@ -149,6 +178,7 @@ const submit = async () => {
       method: "PATCH",
       body: {
         textContent: textContent.value,
+        noticeLevel: isAnnouncement.value ? noticeLevel.value : undefined,
         imageRotationSteps: isInstax.value ? imageRotationQuarterTurns.value : 0
       }
     });

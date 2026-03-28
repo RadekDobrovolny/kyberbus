@@ -29,7 +29,7 @@
         class="absolute bottom-[11.9rem] right-1 flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-pin transition-all duration-200"
         :class="open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
         type="button"
-        aria-label="Vytvořit Dispečink"
+        aria-label="Vytvořit Oznámení"
         @click="create('DISPECINK')"
       >
         <MegaphoneIcon class="h-6 w-6" />

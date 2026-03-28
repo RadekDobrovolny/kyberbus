@@ -54,7 +54,8 @@ export const createLepikSchema = createPostBaseSchema.extend({
 
 export const createDispecinkSchema = createPostBaseSchema.extend({
   type: z.literal("DISPECINK"),
-  textContent: z.string().trim().max(200, "Dispečink může mít max 200 znaků")
+  textContent: z.string().trim().max(500, "Oznámení může mít max 500 znaků"),
+  noticeLevel: z.enum(["INFO", "IMPORTANT"]).optional().default("INFO")
 });
 
 export const createMestoSchema = createPostBaseSchema.extend({

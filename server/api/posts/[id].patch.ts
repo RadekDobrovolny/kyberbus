@@ -6,7 +6,11 @@ import { posts } from "~~/server/db/schema";
 import { isAdmin, requireUser } from "~~/server/utils/auth";
 import { publishFeedUpdate } from "~~/server/utils/feed-events";
 import { rotateStoredImage } from "~~/server/utils/uploads";
-import { getPostMaxLength } from "~~/shared/content";
+import {
+  getPostMaxLength,
+  isNoticeLevel,
+  normalizeNoticeLevel
+} from "~~/shared/content";
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event);
@@ -23,6 +27,7 @@ export default defineEventHandler(async (event) => {
       id: posts.id,
       authorId: posts.authorId,
       type: posts.type,
+      noticeLevel: posts.noticeLevel,
       imagePath: posts.imagePath
     })
     .from(posts)
@@ -39,6 +44,15 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
   const textContent = String(body?.textContent || "").trim();
+  const noticeLevelRaw =
+    typeof body?.noticeLevel === "string" ? body.noticeLevel.toUpperCase() : body?.noticeLevel;
+  if (existing.type === "DISPECINK" && noticeLevelRaw !== undefined && !isNoticeLevel(noticeLevelRaw)) {
+    throw createError({ statusCode: 400, statusMessage: "Neplatná úroveň oznámení." });
+  }
+  const nextNoticeLevel =
+    existing.type === "DISPECINK"
+      ? normalizeNoticeLevel(noticeLevelRaw ?? existing.noticeLevel)
+      : existing.noticeLevel;
   const imageRotationStepsRaw = Number.parseInt(String(body?.imageRotationSteps ?? "0"), 10);
   const imageRotationSteps =
     Number.isFinite(imageRotationStepsRaw) && imageRotationStepsRaw >= 0
@@ -68,6 +82,7 @@ export default defineEventHandler(async (event) => {
     .update(posts)
     .set({
       textContent,
+      noticeLevel: nextNoticeLevel,
       updatedAt: Date.now()
     })
     .where(eq(posts.id, postId));

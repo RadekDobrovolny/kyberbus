@@ -11,7 +11,12 @@ import {
   createLepikSchema,
   createMestoSchema
 } from "~~/server/utils/validation";
-import { canCreatePostType, isPostType } from "~~/shared/content";
+import {
+  canCreatePostType,
+  isNoticeLevel,
+  isPostType,
+  normalizeNoticeLevel
+} from "~~/shared/content";
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event);
@@ -119,15 +124,22 @@ export default defineEventHandler(async (event) => {
   }
 
   if (type === "DISPECINK") {
+    const noticeLevelRaw =
+      typeof fields.noticeLevel === "string" ? fields.noticeLevel.toUpperCase() : fields.noticeLevel;
+    if (noticeLevelRaw !== undefined && !isNoticeLevel(noticeLevelRaw)) {
+      throw createError({ statusCode: 400, statusMessage: "Neplatná úroveň oznámení." });
+    }
+    const noticeLevel = normalizeNoticeLevel(noticeLevelRaw);
     const parsed = createDispecinkSchema.safeParse({
       type,
-      textContent: fields.textContent || ""
+      textContent: fields.textContent || "",
+      noticeLevel
     });
 
     if (!parsed.success) {
       throw createError({
         statusCode: 400,
-        statusMessage: parsed.error.issues[0]?.message || "Neplatný Dispečink příspěvek."
+        statusMessage: parsed.error.issues[0]?.message || "Neplatné oznámení."
       });
     }
 
@@ -136,6 +148,7 @@ export default defineEventHandler(async (event) => {
       authorId: user.id,
       type: "DISPECINK",
       textContent: parsed.data.textContent,
+      noticeLevel: parsed.data.noticeLevel,
       imagePath: null,
       createdAt: ts,
       updatedAt: ts
