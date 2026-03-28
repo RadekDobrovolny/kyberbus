@@ -1,4 +1,5 @@
 import type { NoticeLevel } from "~~/shared/content";
+import type { KdoParticipant } from "~~/shared/kdo";
 import type { ReactionCounts, ViewerReactions } from "~~/shared/reactions";
 
 export type AuthUser = {
@@ -14,7 +15,7 @@ export type AuthUser = {
 
 export type FeedItem = {
   id: string;
-  type: "INSTAX" | "LEPIK" | "DISPECINK" | "MESTO";
+  type: "INSTAX" | "LEPIK" | "DISPECINK" | "KDO" | "MESTO";
   noticeLevel: NoticeLevel;
   textContent: string;
   imagePath: string | null;
@@ -25,4 +26,6 @@ export type FeedItem = {
   authorPhotoPath: string;
   reactions: ReactionCounts;
   viewerReactions: ViewerReactions;
+  kdoParticipants: KdoParticipant[];
+  viewerJoinedKdo: boolean;
 };

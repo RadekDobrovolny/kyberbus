@@ -60,8 +60,11 @@ const realtimePollMs = 5000;
 let feedStream: EventSource | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-const fetchFeed = async (cursor?: string) => {
-  loading.value = true;
+const fetchFeed = async (cursor?: string, options?: { silent?: boolean }) => {
+  const silent = Boolean(options?.silent);
+  if (!silent) {
+    loading.value = true;
+  }
   try {
     const params = new URLSearchParams({ limit: "30" });
     if (cursor) {
@@ -79,7 +82,9 @@ const fetchFeed = async (cursor?: string) => {
     }
     nextCursor.value = result.nextCursor;
   } finally {
-    loading.value = false;
+    if (!silent) {
+      loading.value = false;
+    }
   }
 };
 
@@ -89,7 +94,7 @@ const refreshFromRealtime = async () => {
   }
   realtimeRefreshing.value = true;
   try {
-    await fetchFeed();
+    await fetchFeed(undefined, { silent: true });
   } finally {
     realtimeRefreshing.value = false;
   }

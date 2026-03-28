@@ -3,6 +3,7 @@ import { getQuery } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts, users } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { getKdoSummaries } from "~~/server/utils/kdo";
 import { getReactionSummaries } from "~~/server/utils/reactions";
 import { paginationSchema } from "~~/server/utils/validation";
 import { createEmptyReactionCounts, createEmptyViewerReactions } from "~~/shared/reactions";
@@ -50,15 +51,23 @@ export default defineEventHandler(async (event) => {
     user.id,
     items.map((item) => item.id)
   );
+  const kdoSummaries = await getKdoSummaries(
+    db,
+    user.id,
+    items.map((item) => item.id)
+  );
   const last = items[items.length - 1];
 
   return {
     items: items.map((item) => {
       const summary = reactionSummaries[item.id];
+      const kdoSummary = kdoSummaries[item.id];
       return {
         ...item,
         reactions: summary?.reactions || createEmptyReactionCounts(),
-        viewerReactions: summary?.viewerReactions || createEmptyViewerReactions()
+        viewerReactions: summary?.viewerReactions || createEmptyViewerReactions(),
+        kdoParticipants: kdoSummary?.participants || [],
+        viewerJoinedKdo: Boolean(kdoSummary?.viewerJoinedKdo)
       };
     }),
     nextCursor: hasMore && last ? String(last.createdAt) : null

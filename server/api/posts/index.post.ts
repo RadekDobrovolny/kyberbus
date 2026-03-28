@@ -8,6 +8,7 @@ import { processAndStoreImage, validateImageInput } from "~~/server/utils/upload
 import {
   createDispecinkSchema,
   createInstaxSchema,
+  createKdoSchema,
   createLepikSchema,
   createMestoSchema
 } from "~~/server/utils/validation";
@@ -175,6 +176,33 @@ export default defineEventHandler(async (event) => {
       id: postId,
       authorId: user.id,
       type: "MESTO",
+      textContent: parsed.data.textContent,
+      imagePath: null,
+      createdAt: ts,
+      updatedAt: ts
+    });
+
+    publishFeedUpdate("created", postId);
+    return { ok: true, id: postId };
+  }
+
+  if (type === "KDO") {
+    const parsed = createKdoSchema.safeParse({
+      type,
+      textContent: fields.textContent || ""
+    });
+
+    if (!parsed.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: parsed.error.issues[0]?.message || "Neplatná otázka."
+      });
+    }
+
+    await db.insert(posts).values({
+      id: postId,
+      authorId: user.id,
+      type: "KDO",
       textContent: parsed.data.textContent,
       imagePath: null,
       createdAt: ts,

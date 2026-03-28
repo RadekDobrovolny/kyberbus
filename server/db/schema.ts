@@ -37,7 +37,7 @@ export const posts = sqliteTable(
     authorId: text("author_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type", { enum: ["INSTAX", "LEPIK", "DISPECINK", "MESTO"] }).notNull(),
+    type: text("type", { enum: ["INSTAX", "LEPIK", "DISPECINK", "KDO", "MESTO"] }).notNull(),
     noticeLevel: text("notice_level", { enum: ["INFO", "IMPORTANT"] }).notNull().default("INFO"),
     textContent: text("text_content").notNull(),
     imagePath: text("image_path"),
@@ -47,6 +47,24 @@ export const posts = sqliteTable(
   (table) => ({
     createdAtIdx: index("posts_created_at_idx").on(table.createdAt),
     authorIdIdx: index("posts_author_id_idx").on(table.authorId)
+  })
+);
+
+export const postKdoHands = sqliteTable(
+  "post_kdo_hands",
+  {
+    postId: text("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull()
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.postId, table.userId] }),
+    postIdIdx: index("post_kdo_hands_post_id_idx").on(table.postId),
+    userIdIdx: index("post_kdo_hands_user_id_idx").on(table.userId)
   })
 );
 
@@ -74,3 +92,4 @@ export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type PostReaction = typeof postReactions.$inferSelect;
+export type PostKdoHand = typeof postKdoHands.$inferSelect;

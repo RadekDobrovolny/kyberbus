@@ -21,25 +21,41 @@ export const POST_TYPE_CONFIG = {
     label: "Instax",
     maxLength: 50,
     requiresImage: true,
-    adminOnly: false
+    adminOnly: false,
+    description: "Fotka s krátkým popiskem momentky.",
+    sampleText: "Ranni bus."
   },
   LEPIK: {
     label: "Lepík",
     maxLength: 200,
     requiresImage: false,
-    adminOnly: false
+    adminOnly: false,
+    description: "Krátká textová myšlenka bez fotky.",
+    sampleText: "Dneska jedu."
   },
   DISPECINK: {
     label: "Oznámení",
     maxLength: 500,
     requiresImage: false,
-    adminOnly: true
+    adminOnly: true,
+    description: "Info nebo důležité oznámení pro všechny.",
+    sampleText: "Sraz v 8:00."
+  },
+  KDO: {
+    label: "Otázka",
+    maxLength: 150,
+    requiresImage: false,
+    adminOnly: false,
+    description: "Otázka, ke které se ostatní hlásí tlačítkem ruky. Měla by začínat tázacími zájmeny Kdo/Komu/S kým apod.",
+    sampleText: "Kdo dorazí?"
   },
   MESTO: {
     label: "Město",
     maxLength: 100,
     requiresImage: false,
-    adminOnly: true
+    adminOnly: true,
+    description: "Název místa stylizovaný jako značka obce.",
+    sampleText: "BRNO"
   }
 } as const;
 
@@ -51,6 +67,8 @@ export const isPostType = (value: unknown): value is PostType =>
   typeof value === "string" && value in POST_TYPE_CONFIG;
 
 export const getPostMaxLength = (type: PostType) => POST_TYPE_CONFIG[type].maxLength;
+export const getPostDescription = (type: PostType) => POST_TYPE_CONFIG[type].description;
+export const getPostSampleText = (type: PostType) => POST_TYPE_CONFIG[type].sampleText;
 
 export const postTypeRequiresImage = (type: PostType) => POST_TYPE_CONFIG[type].requiresImage;
 

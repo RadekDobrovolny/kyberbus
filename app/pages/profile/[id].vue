@@ -82,6 +82,7 @@ import {
   TrashIcon
 } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
+import type { KdoParticipant } from "~~/shared/kdo";
 import type { ReactionCounts, ViewerReactions } from "~~/shared/reactions";
 
 definePageMeta({
@@ -100,7 +101,7 @@ type ProfileResponse = {
   };
   posts: Array<{
     id: string;
-    type: "INSTAX" | "LEPIK" | "DISPECINK" | "MESTO";
+    type: "INSTAX" | "LEPIK" | "DISPECINK" | "KDO" | "MESTO";
     noticeLevel: "INFO" | "IMPORTANT";
     textContent: string;
     imagePath: string | null;
@@ -108,6 +109,8 @@ type ProfileResponse = {
     updatedAt: number;
     reactions: ReactionCounts;
     viewerReactions: ViewerReactions;
+    kdoParticipants: KdoParticipant[];
+    viewerJoinedKdo: boolean;
   }>;
 };
 

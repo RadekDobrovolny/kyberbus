@@ -151,4 +151,17 @@ export const ensureSchema = () => {
   `);
   db.run(sql`CREATE INDEX IF NOT EXISTS post_reactions_post_id_idx ON post_reactions(post_id);`);
   db.run(sql`CREATE INDEX IF NOT EXISTS post_reactions_user_id_idx ON post_reactions(user_id);`);
+
+  db.run(sql`
+    CREATE TABLE IF NOT EXISTS post_kdo_hands (
+      post_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (post_id, user_id),
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+  db.run(sql`CREATE INDEX IF NOT EXISTS post_kdo_hands_post_id_idx ON post_kdo_hands(post_id);`);
+  db.run(sql`CREATE INDEX IF NOT EXISTS post_kdo_hands_user_id_idx ON post_kdo_hands(user_id);`);
 };

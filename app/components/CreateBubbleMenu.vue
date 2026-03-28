@@ -25,8 +25,18 @@
       </button>
 
       <button
-        v-if="isAdmin"
         class="absolute bottom-[11.9rem] right-1 flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-pin transition-all duration-200"
+        :class="open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
+        type="button"
+        aria-label="Vytvořit Otázku"
+        @click="create('KDO')"
+      >
+        <QuestionMarkCircleIcon class="h-6 w-6" />
+      </button>
+
+      <button
+        v-if="isAdmin"
+        class="absolute bottom-[15.7rem] right-1 flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-pin transition-all duration-200"
         :class="open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
         type="button"
         aria-label="Vytvořit Oznámení"
@@ -36,7 +46,7 @@
       </button>
       <button
         v-if="isAdmin"
-        class="absolute bottom-[15.7rem] right-1 flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-pin transition-all duration-200"
+        class="absolute bottom-[19.5rem] right-1 flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-pin transition-all duration-200"
         :class="open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
         type="button"
         aria-label="Vytvořit Město"
@@ -65,6 +75,7 @@ import {
   MapPinIcon,
   MegaphoneIcon,
   PlusIcon,
+  QuestionMarkCircleIcon,
   XMarkIcon
 } from "@heroicons/vue/24/outline";
 import type { PostType } from "~~/shared/content";

@@ -93,6 +93,59 @@
         </div>
       </template>
 
+      <template v-else-if="isKdo">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
+            <img
+              :src="mediaUrl(item.authorPhotoPath)"
+              alt="Profil autora"
+              class="h-9 w-9 rounded-full border border-stone-300 object-cover"
+            />
+            <span class="font-semibold text-stone-800">{{ item.authorShortName }} se ptá:</span>
+          </NuxtLink>
+          <span class="text-xs text-stone-600">{{ formatDate(item.createdAt) }}</span>
+        </div>
+
+        <div class="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-400 bg-amber-200">
+            <QuestionMarkCircleIcon class="h-7 w-7 text-amber-700" />
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-3">
+              <p class="min-w-0 flex-1 whitespace-pre-wrap text-base font-semibold leading-snug text-stone-900">
+                {{ item.textContent }}
+              </p>
+              <button
+                type="button"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-2xl transition-colors"
+                :class="viewerJoinedKdoState
+                  ? 'border-amber-500 bg-amber-200'
+                  : 'border-stone-300 bg-white hover:bg-stone-100'"
+                :disabled="pendingKdoToggle"
+                aria-label="Zvednout ruku"
+                @click="toggleKdoHand"
+              >
+                🙋‍♀️
+              </button>
+            </div>
+
+            <p v-if="kdoParticipantsState.length === 0" class="mt-3 text-sm text-stone-600">
+              Zatím nikdo.
+            </p>
+            <ul v-else class="mt-3 space-y-1">
+              <li
+                v-for="participant in kdoParticipantsState"
+                :key="participant.userId"
+                class="text-sm font-medium text-stone-800"
+              >
+                {{ participant.shortName }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </template>
+
       <template v-else>
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
@@ -175,8 +228,15 @@
 </template>
 
 <script setup lang="ts">
-import { MegaphoneIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import {
+  MegaphoneIcon,
+  PencilSquareIcon,
+  QuestionMarkCircleIcon,
+  TrashIcon,
+  XMarkIcon
+} from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
+import type { KdoParticipant } from "~~/shared/kdo";
 import {
   createEmptyReactionCounts,
   createEmptyViewerReactions,
@@ -199,11 +259,13 @@ defineEmits<{
 const isLepik = computed(() => props.item.type === "LEPIK");
 const isInstax = computed(() => props.item.type === "INSTAX");
 const isAnnouncement = computed(() => props.item.type === "DISPECINK");
+const isKdo = computed(() => props.item.type === "KDO");
 const isMesto = computed(() => props.item.type === "MESTO");
 const isImportantAnnouncement = computed(
   () => isAnnouncement.value && props.item.noticeLevel === "IMPORTANT"
 );
 const isImageModalOpen = ref(false);
+const pendingKdoToggle = ref(false);
 const reactionButtons: Array<{ type: ReactionType; key: ReactionKey; emoji: string }> = [
   { type: "HEART", key: "heart", emoji: "❤️" },
   { type: "LAUGH", key: "laugh", emoji: "😄" },
@@ -221,6 +283,8 @@ const reactionState = ref<{
   reactions: createEmptyReactionCounts(),
   viewerReactions: createEmptyViewerReactions()
 });
+const kdoParticipantsState = ref<KdoParticipant[]>([]);
+const viewerJoinedKdoState = ref(false);
 
 const snapshotReactionState = () => ({
   reactions: { ...reactionState.value.reactions },
@@ -240,6 +304,13 @@ const syncReactionStateFromItem = () => {
   };
 };
 
+const syncKdoStateFromItem = () => {
+  kdoParticipantsState.value = Array.isArray(props.item.kdoParticipants)
+    ? [...props.item.kdoParticipants]
+    : [];
+  viewerJoinedKdoState.value = Boolean(props.item.viewerJoinedKdo);
+};
+
 watch(
   () => [
     props.item.id,
@@ -255,6 +326,14 @@ watch(
     syncReactionStateFromItem();
   },
   { immediate: true }
+);
+
+watch(
+  () => [props.item.id, props.item.updatedAt, props.item.kdoParticipants, props.item.viewerJoinedKdo],
+  () => {
+    syncKdoStateFromItem();
+  },
+  { immediate: true, deep: true }
 );
 
 const hashId = (id: string) =>
@@ -295,6 +374,9 @@ const cardClass = computed(() => {
     return "relative mx-auto mb-20 w-full max-w-[30rem] overflow-hidden rounded-xl border border-stone-300 bg-white p-2 shadow-[0_14px_24px_rgba(0,0,0,0.14),0_3px_10px_rgba(0,0,0,0.1)]";
   }
   if (isAnnouncement.value) {
+    return "relative mx-auto mb-20 w-full max-w-[34rem] overflow-hidden rounded-xl border border-stone-300 bg-white p-4 shadow-[0_14px_24px_rgba(0,0,0,0.14),0_3px_10px_rgba(0,0,0,0.1)]";
+  }
+  if (isKdo.value) {
     return "relative mx-auto mb-20 w-full max-w-[34rem] overflow-hidden rounded-xl border border-stone-300 bg-white p-4 shadow-[0_14px_24px_rgba(0,0,0,0.14),0_3px_10px_rgba(0,0,0,0.1)]";
   }
 
@@ -369,6 +451,27 @@ const toggleReaction = async (reactionType: ReactionType, key: ReactionKey) => {
     reactionState.value = previous;
   } finally {
     pendingByReaction[key] = false;
+  }
+};
+
+const toggleKdoHand = async () => {
+  if (!isKdo.value || pendingKdoToggle.value) {
+    return;
+  }
+
+  pendingKdoToggle.value = true;
+  try {
+    const result = await $fetch<{
+      participants: KdoParticipant[];
+      viewerJoinedKdo: boolean;
+    }>(`/api/posts/${props.item.id}/kdo-hand`, {
+      method: "POST"
+    });
+
+    kdoParticipantsState.value = result.participants;
+    viewerJoinedKdoState.value = result.viewerJoinedKdo;
+  } finally {
+    pendingKdoToggle.value = false;
   }
 };
 

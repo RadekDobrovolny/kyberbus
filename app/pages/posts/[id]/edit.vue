@@ -130,6 +130,9 @@ const typeLabel = computed(() => {
   if (post.value.type === "DISPECINK") {
     return "Oznámení";
   }
+  if (post.value.type === "KDO") {
+    return "Otázka";
+  }
   if (post.value.type === "MESTO") {
     return "Město";
   }

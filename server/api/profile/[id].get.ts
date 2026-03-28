@@ -3,6 +3,7 @@ import { createError, getRouterParam } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts, users } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { getKdoSummaries } from "~~/server/utils/kdo";
 import { getReactionSummaries } from "~~/server/utils/reactions";
 import { createEmptyReactionCounts, createEmptyViewerReactions } from "~~/shared/reactions";
 
@@ -54,15 +55,23 @@ export default defineEventHandler(async (event) => {
     user.id,
     authoredPosts.map((post) => post.id)
   );
+  const kdoSummaries = await getKdoSummaries(
+    db,
+    user.id,
+    authoredPosts.map((post) => post.id)
+  );
 
   return {
     profile,
     posts: authoredPosts.map((post) => {
       const summary = reactionSummaries[post.id];
+      const kdoSummary = kdoSummaries[post.id];
       return {
         ...post,
         reactions: summary?.reactions || createEmptyReactionCounts(),
-        viewerReactions: summary?.viewerReactions || createEmptyViewerReactions()
+        viewerReactions: summary?.viewerReactions || createEmptyViewerReactions(),
+        kdoParticipants: kdoSummary?.participants || [],
+        viewerJoinedKdo: Boolean(kdoSummary?.viewerJoinedKdo)
       };
     })
   };

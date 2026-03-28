@@ -3,10 +3,10 @@
     <h1 class="mb-4 text-xl font-black text-stone-900">Nový příspěvek</h1>
 
     <form class="space-y-4" @submit.prevent="submit">
-      <div class="grid grid-cols-2 gap-3">
+      <div class="flex flex-wrap items-center justify-start gap-2">
         <button
           type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-pin transition-colors"
+          class="inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold shadow-pin transition-colors"
           :class="type === 'INSTAX'
             ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
             : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
@@ -17,7 +17,7 @@
         </button>
         <button
           type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-pin transition-colors"
+          class="inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold shadow-pin transition-colors"
           :class="type === 'LEPIK'
             ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
             : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
@@ -27,9 +27,20 @@
           Lepík
         </button>
         <button
+          type="button"
+          class="inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold shadow-pin transition-colors"
+          :class="type === 'KDO'
+            ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
+            : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
+          @click="type = 'KDO'"
+        >
+          <QuestionMarkCircleIcon class="h-4 w-4" />
+          Otázka
+        </button>
+        <button
           v-if="isAdmin"
           type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-pin transition-colors"
+          class="inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold shadow-pin transition-colors"
           :class="type === 'DISPECINK'
             ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
             : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
@@ -41,7 +52,7 @@
         <button
           v-if="isAdmin"
           type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-pin transition-colors"
+          class="inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold shadow-pin transition-colors"
           :class="type === 'MESTO'
             ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
             : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
@@ -51,6 +62,8 @@
           Město
         </button>
       </div>
+
+      <p class="text-xs text-stone-600">{{ selectedTypeDescription }}</p>
 
       <template v-if="showImageField">
         <label class="block text-sm">
@@ -108,8 +121,9 @@
         <span class="mb-1 block font-medium text-stone-700">Text</span>
         <textarea
           v-model="textContent"
-          class="min-h-24 w-full rounded border border-stone-300 p-2"
+          class="min-h-24 w-full rounded border border-stone-300 p-2 placeholder:text-stone-400 focus:placeholder-transparent"
           :maxlength="maxLen"
+          :placeholder="sampleTextPlaceholder"
         />
         <span class="mt-1 block text-xs text-stone-600">{{ textContent.length }} / {{ maxLen }}</span>
       </label>
@@ -146,11 +160,14 @@ import {
   DocumentTextIcon,
   MapPinIcon,
   MegaphoneIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  QuestionMarkCircleIcon
 } from "@heroicons/vue/24/outline";
 import {
   canCreatePostType,
+  getPostDescription,
   getPostMaxLength,
+  getPostSampleText,
   isPostType,
   postTypeRequiresImage,
   type NoticeLevel,
@@ -188,6 +205,8 @@ const imageRotationQuarterTurns = ref(0);
 const showImageField = computed(() => postTypeRequiresImage(type.value));
 const maxLen = computed(() => getPostMaxLength(type.value));
 const imageRotationDegrees = computed(() => imageRotationQuarterTurns.value * 90);
+const selectedTypeDescription = computed(() => getPostDescription(type.value));
+const sampleTextPlaceholder = computed(() => getPostSampleText(type.value));
 
 const normalizeType = (value: unknown): PostType => {
   const maybe = String(value || "").toUpperCase();
