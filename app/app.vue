@@ -32,7 +32,7 @@
               aria-label="Odhlášení"
               @click="handleLogout"
             >
-              <ArrowLeftStartOnRectangleIcon class="h-6 w-6" />
+              <ArrowRightEndOnRectangleIcon class="h-6 w-6" />
             </button>
           </template>
           <template v-else>
@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeftStartOnRectangleIcon } from "@heroicons/vue/24/outline";
+import { ArrowRightEndOnRectangleIcon } from "@heroicons/vue/24/outline";
 
 const auth = useAuth();
 

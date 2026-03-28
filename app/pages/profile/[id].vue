@@ -82,6 +82,7 @@ import {
   TrashIcon
 } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
+import type { ReactionCounts, ViewerReactions } from "~~/shared/reactions";
 
 definePageMeta({
   middleware: "auth"
@@ -104,6 +105,8 @@ type ProfileResponse = {
     imagePath: string | null;
     createdAt: number;
     updatedAt: number;
+    reactions: ReactionCounts;
+    viewerReactions: ViewerReactions;
   }>;
 };
 

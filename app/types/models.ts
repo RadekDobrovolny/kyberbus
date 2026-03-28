@@ -1,3 +1,5 @@
+import type { ReactionCounts, ViewerReactions } from "~~/shared/reactions";
+
 export type AuthUser = {
   id: string;
   login: string;
@@ -19,4 +21,6 @@ export type FeedItem = {
   authorId: string;
   authorShortName: string;
   authorPhotoPath: string;
+  reactions: ReactionCounts;
+  viewerReactions: ViewerReactions;
 };

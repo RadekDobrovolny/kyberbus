@@ -68,21 +68,41 @@
         </p>
       </template>
 
-      <div v-if="editable" class="mt-4 flex gap-2">
-        <button
-          class="rounded border border-stone-400 px-2 py-1 text-xs font-medium text-stone-700"
-          type="button"
-          @click="$emit('edit', item)"
-        >
-          Upravit
-        </button>
-        <button
-          class="rounded border border-red-300 px-2 py-1 text-xs font-medium text-red-700"
-          type="button"
-          @click="$emit('remove', item)"
-        >
-          Smazat
-        </button>
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button
+            v-for="reaction in reactionButtons"
+            :key="reaction.type"
+            class="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-65"
+            :class="reactionButtonClass(reaction.key)"
+            :disabled="pendingByReaction[reaction.key]"
+            :aria-label="`Reagovat ${reaction.emoji}`"
+            type="button"
+            @click="toggleReaction(reaction.type, reaction.key)"
+          >
+            <span aria-hidden="true" class="text-2xl leading-none">{{ reaction.emoji }}</span>
+            <span>{{ reactionState.reactions[reaction.key] }}</span>
+          </button>
+        </div>
+
+        <div v-if="editable" class="flex gap-2">
+          <button
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 bg-stone-100 text-stone-700 transition-colors hover:bg-stone-200"
+            type="button"
+            aria-label="Upravit příspěvek"
+            @click="$emit('edit', item)"
+          >
+            <PencilSquareIcon class="h-4 w-4" />
+          </button>
+          <button
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300 bg-red-50 text-red-700 transition-colors hover:bg-red-100"
+            type="button"
+            aria-label="Smazat příspěvek"
+            @click="$emit('remove', item)"
+          >
+            <TrashIcon class="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   </article>
@@ -113,8 +133,16 @@
 </template>
 
 <script setup lang="ts">
-import { XMarkIcon } from "@heroicons/vue/24/outline";
+import { PencilSquareIcon, TrashIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
+import {
+  createEmptyReactionCounts,
+  createEmptyViewerReactions,
+  type ReactionCounts,
+  type ReactionKey,
+  type ReactionType,
+  type ViewerReactions
+} from "~~/shared/reactions";
 
 const props = defineProps<{
   item: FeedItem;
@@ -130,6 +158,58 @@ const isLepik = computed(() => props.item.type === "LEPIK");
 const isInstax = computed(() => props.item.type === "INSTAX");
 const isMesto = computed(() => props.item.type === "MESTO");
 const isImageModalOpen = ref(false);
+const reactionButtons: Array<{ type: ReactionType; key: ReactionKey; emoji: string }> = [
+  { type: "HEART", key: "heart", emoji: "❤️" },
+  { type: "LAUGH", key: "laugh", emoji: "😄" },
+  { type: "ROCKET", key: "rocket", emoji: "🚀" }
+];
+const pendingByReaction = reactive<Record<ReactionKey, boolean>>({
+  heart: false,
+  laugh: false,
+  rocket: false
+});
+const reactionState = ref<{
+  reactions: ReactionCounts;
+  viewerReactions: ViewerReactions;
+}>({
+  reactions: createEmptyReactionCounts(),
+  viewerReactions: createEmptyViewerReactions()
+});
+
+const snapshotReactionState = () => ({
+  reactions: { ...reactionState.value.reactions },
+  viewerReactions: { ...reactionState.value.viewerReactions }
+});
+
+const syncReactionStateFromItem = () => {
+  reactionState.value = {
+    reactions: {
+      ...createEmptyReactionCounts(),
+      ...props.item.reactions
+    },
+    viewerReactions: {
+      ...createEmptyViewerReactions(),
+      ...props.item.viewerReactions
+    }
+  };
+};
+
+watch(
+  () => [
+    props.item.id,
+    props.item.updatedAt,
+    props.item.reactions.heart,
+    props.item.reactions.laugh,
+    props.item.reactions.rocket,
+    props.item.viewerReactions.heart,
+    props.item.viewerReactions.laugh,
+    props.item.viewerReactions.rocket
+  ],
+  () => {
+    syncReactionStateFromItem();
+  },
+  { immediate: true }
+);
 
 const hashId = (id: string) =>
   Array.from(id).reduce((acc, ch) => ((acc * 31 + ch.charCodeAt(0)) >>> 0), 7);
@@ -202,6 +282,46 @@ const paperTextureStyle = computed(() =>
 const mediaUrl = (path: string, version?: number) =>
   version ? `/api/media/${path}?v=${version}` : `/api/media/${path}`;
 const mestoDisplayText = computed(() => props.item.textContent.trim().toLocaleUpperCase("cs-CZ"));
+
+const reactionButtonClass = (key: ReactionKey) =>
+  reactionState.value.viewerReactions[key]
+    ? "border-accent-500 bg-accent-100 text-accent-900"
+    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100";
+
+const toggleReaction = async (reactionType: ReactionType, key: ReactionKey) => {
+  if (pendingByReaction[key]) {
+    return;
+  }
+
+  const previous = snapshotReactionState();
+  const alreadyReacted = reactionState.value.viewerReactions[key];
+  reactionState.value.viewerReactions[key] = !alreadyReacted;
+  reactionState.value.reactions[key] = Math.max(
+    0,
+    reactionState.value.reactions[key] + (alreadyReacted ? -1 : 1)
+  );
+
+  pendingByReaction[key] = true;
+  try {
+    const result = await $fetch<{
+      reactions: ReactionCounts;
+      viewerReactions: ViewerReactions;
+    }>(`/api/posts/${props.item.id}/reactions`, {
+      method: "POST",
+      body: {
+        reactionType
+      }
+    });
+    reactionState.value = {
+      reactions: result.reactions,
+      viewerReactions: result.viewerReactions
+    };
+  } catch {
+    reactionState.value = previous;
+  } finally {
+    pendingByReaction[key] = false;
+  }
+};
 
 const openImageModal = () => {
   if (!props.item.imagePath) {

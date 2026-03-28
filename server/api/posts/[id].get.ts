@@ -3,6 +3,8 @@ import { createError, getRouterParam } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts, users } from "~~/server/db/schema";
 import { isAdmin, requireUser } from "~~/server/utils/auth";
+import { getReactionSummaries } from "~~/server/utils/reactions";
+import { createEmptyReactionCounts, createEmptyViewerReactions } from "~~/shared/reactions";
 
 export default defineEventHandler(async (event) => {
   const authUser = await requireUser(event);
@@ -39,5 +41,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: "Tento příspěvek nemůžeš upravit." });
   }
 
-  return { post };
+  const reactionSummaries = await getReactionSummaries(db, authUser.id, [post.id]);
+  const summary = reactionSummaries[post.id];
+
+  return {
+    post: {
+      ...post,
+      reactions: summary?.reactions || createEmptyReactionCounts(),
+      viewerReactions: summary?.viewerReactions || createEmptyViewerReactions()
+    }
+  };
 });

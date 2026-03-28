@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -49,7 +49,27 @@ export const posts = sqliteTable(
   })
 );
 
+export const postReactions = sqliteTable(
+  "post_reactions",
+  {
+    postId: text("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reactionType: text("reaction_type", { enum: ["HEART", "LAUGH", "ROCKET"] }).notNull(),
+    createdAt: integer("created_at").notNull()
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.postId, table.userId, table.reactionType] }),
+    postIdIdx: index("post_reactions_post_id_idx").on(table.postId),
+    userIdIdx: index("post_reactions_user_id_idx").on(table.userId)
+  })
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+export type PostReaction = typeof postReactions.$inferSelect;

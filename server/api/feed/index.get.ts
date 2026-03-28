@@ -3,10 +3,12 @@ import { getQuery } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts, users } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { getReactionSummaries } from "~~/server/utils/reactions";
 import { paginationSchema } from "~~/server/utils/validation";
+import { createEmptyReactionCounts, createEmptyViewerReactions } from "~~/shared/reactions";
 
 export default defineEventHandler(async (event) => {
-  await requireUser(event);
+  const user = await requireUser(event);
   ensureSchema();
   const db = getDb();
   const query = getQuery(event);
@@ -42,10 +44,22 @@ export default defineEventHandler(async (event) => {
 
   const hasMore = rows.length > limit;
   const items = hasMore ? rows.slice(0, limit) : rows;
+  const reactionSummaries = await getReactionSummaries(
+    db,
+    user.id,
+    items.map((item) => item.id)
+  );
   const last = items[items.length - 1];
 
   return {
-    items,
+    items: items.map((item) => {
+      const summary = reactionSummaries[item.id];
+      return {
+        ...item,
+        reactions: summary?.reactions || createEmptyReactionCounts(),
+        viewerReactions: summary?.viewerReactions || createEmptyViewerReactions()
+      };
+    }),
     nextCursor: hasMore && last ? String(last.createdAt) : null
   };
 });

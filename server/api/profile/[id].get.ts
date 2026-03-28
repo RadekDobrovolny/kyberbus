@@ -3,9 +3,11 @@ import { createError, getRouterParam } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts, users } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
+import { getReactionSummaries } from "~~/server/utils/reactions";
+import { createEmptyReactionCounts, createEmptyViewerReactions } from "~~/shared/reactions";
 
 export default defineEventHandler(async (event) => {
-  await requireUser(event);
+  const user = await requireUser(event);
   ensureSchema();
   const db = getDb();
   const id = getRouterParam(event, "id");
@@ -46,5 +48,21 @@ export default defineEventHandler(async (event) => {
     .orderBy(desc(posts.createdAt))
     .limit(30);
 
-  return { profile, posts: authoredPosts };
+  const reactionSummaries = await getReactionSummaries(
+    db,
+    user.id,
+    authoredPosts.map((post) => post.id)
+  );
+
+  return {
+    profile,
+    posts: authoredPosts.map((post) => {
+      const summary = reactionSummaries[post.id];
+      return {
+        ...post,
+        reactions: summary?.reactions || createEmptyReactionCounts(),
+        viewerReactions: summary?.viewerReactions || createEmptyViewerReactions()
+      };
+    })
+  };
 });

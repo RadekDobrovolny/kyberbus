@@ -127,4 +127,18 @@ export const ensureSchema = () => {
   `);
   db.run(sql`CREATE INDEX IF NOT EXISTS posts_created_at_idx ON posts(created_at);`);
   db.run(sql`CREATE INDEX IF NOT EXISTS posts_author_id_idx ON posts(author_id);`);
+
+  db.run(sql`
+    CREATE TABLE IF NOT EXISTS post_reactions (
+      post_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      reaction_type TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (post_id, user_id, reaction_type),
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+  db.run(sql`CREATE INDEX IF NOT EXISTS post_reactions_post_id_idx ON post_reactions(post_id);`);
+  db.run(sql`CREATE INDEX IF NOT EXISTS post_reactions_user_id_idx ON post_reactions(user_id);`);
 };
