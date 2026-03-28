@@ -26,6 +26,14 @@
             <span class="text-stone-500">…</span>
           </template>
           <template v-else-if="auth.user.value">
+            <NuxtLink
+              v-if="auth.user.value.role === 'ADMIN'"
+              to="/busadmin"
+              class="rounded-full p-2 text-stone-700 transition-colors hover:bg-stone-200 hover:text-stone-900"
+              aria-label="Admin"
+            >
+              <UsersIcon class="h-6 w-6" />
+            </NuxtLink>
             <button
               class="rounded-full p-2 text-stone-700 transition-colors hover:bg-stone-200 hover:text-stone-900"
               type="button"
@@ -85,7 +93,10 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRightEndOnRectangleIcon } from "@heroicons/vue/24/outline";
+import {
+  ArrowRightEndOnRectangleIcon,
+  UsersIcon
+} from "@heroicons/vue/24/outline";
 
 const auth = useAuth();
 
