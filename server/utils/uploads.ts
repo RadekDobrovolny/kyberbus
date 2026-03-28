@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import sharp from "sharp";
@@ -12,6 +12,8 @@ export type UploadedImage = {
 type SourceImageMeta = {
   mimeType?: string;
   fileName?: string;
+  rotateDegrees?: number;
+  rotateQuarterTurns?: number;
 };
 
 const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".avif"];
@@ -86,13 +88,29 @@ export const processAndStoreImage = async (
   const absolutePath = join(folder, fileName);
 
   try {
+    const rotateQuarterTurnsRaw =
+      sourceMeta?.rotateQuarterTurns ??
+      (Number.isFinite(Number(sourceMeta?.rotateDegrees))
+        ? Math.round(Number(sourceMeta?.rotateDegrees) / 90)
+        : 0);
+    const parsedQuarterTurns = Number.parseInt(String(rotateQuarterTurnsRaw), 10);
+    const rotateQuarterTurns = Number.isFinite(parsedQuarterTurns)
+      ? ((parsedQuarterTurns % 4) + 4) % 4
+      : 0;
+    const rotateDegrees = rotateQuarterTurns * 90;
     const inputBuffer = isLikelyHeic(sourceMeta)
       ? await convertHeicToJpeg(buffer)
       : buffer;
 
-    await sharp(inputBuffer)
+    // Normalize EXIF orientation first, so preview rotation and persisted rotation match.
+    const normalizedBuffer = await sharp(inputBuffer).rotate().toBuffer();
+    const pipeline = sharp(normalizedBuffer);
+    if (rotateDegrees !== 0) {
+      pipeline.rotate(rotateDegrees);
+    }
+
+    await pipeline
       .resize({ width: 1000, withoutEnlargement: true })
-      .withMetadata()
       .webp({ quality: 82 })
       .toFile(absolutePath);
   } catch (error: any) {
@@ -116,4 +134,33 @@ export const processAndStoreImage = async (
 export const getAbsoluteUploadPath = (relativePath: string) => {
   const uploadsDir = ensureUploadsDir();
   return join(uploadsDir, relativePath);
+};
+
+export const rotateStoredImage = async (relativePath: string, degrees: number) => {
+  const absolutePath = getAbsoluteUploadPath(relativePath);
+
+  if (!existsSync(absolutePath)) {
+    throw createError({ statusCode: 404, statusMessage: "Obrázek nebyl nalezen." });
+  }
+
+  if (!Number.isFinite(degrees) || degrees % 90 !== 0 || degrees === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Neplatná hodnota rotace. Použij násobek 90."
+    });
+  }
+
+  try {
+    const sourceBuffer = readFileSync(absolutePath);
+    const rotated = await sharp(sourceBuffer)
+      .rotate(degrees)
+      .webp({ quality: 82 })
+      .toBuffer();
+    writeFileSync(absolutePath, rotated);
+  } catch {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Fotku se nepodařilo otočit."
+    });
+  }
 };

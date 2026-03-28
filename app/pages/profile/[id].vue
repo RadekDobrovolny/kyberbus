@@ -103,6 +103,7 @@ type ProfileResponse = {
     textContent: string;
     imagePath: string | null;
     createdAt: number;
+    updatedAt: number;
   }>;
 };
 
@@ -135,7 +136,6 @@ const editProfileTo = computed(() => {
 const mappedPosts = computed<FeedItem[]>(() =>
   posts.value.map((post) => ({
     ...post,
-    updatedAt: post.createdAt,
     authorId: profile.value?.id || "",
     authorShortName: profile.value?.shortName || "",
     authorPhotoPath: profile.value?.profilePhotoPath || ""

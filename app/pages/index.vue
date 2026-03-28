@@ -25,26 +25,6 @@
   </section>
 
   <section v-else>
-    <div v-if="editingPost" class="mb-6 rounded-xl border border-stone-300 bg-white p-4 shadow-pin">
-      <h2 class="mb-3 font-bold text-stone-900">Upravit příspěvek</h2>
-      <textarea
-        v-model="editText"
-        class="min-h-24 w-full rounded border border-stone-300 bg-stone-50 p-2 text-sm"
-        :maxlength="getEditMaxLen(editingPost.type)"
-      />
-      <div class="mt-2 text-xs text-stone-600">
-        {{ editText.length }} / {{ getEditMaxLen(editingPost.type) }}
-      </div>
-      <div class="mt-3 flex gap-2">
-        <button class="rounded bg-accent-500 px-3 py-1.5 text-sm font-semibold text-white" @click="saveEdit">
-          Uložit
-        </button>
-        <button class="rounded border border-stone-300 px-3 py-1.5 text-sm font-semibold text-stone-700" @click="cancelEdit">
-          Zrušit
-        </button>
-      </div>
-    </div>
-
     <PostCard
       v-for="item in items"
       :key="item.id"
@@ -69,7 +49,6 @@
 
 <script setup lang="ts">
 import type { FeedItem } from "~/types/models";
-import { getPostMaxLength } from "~~/shared/content";
 
 const auth = useAuth();
 const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
@@ -78,9 +57,6 @@ const nextCursor = ref<string | null>(null);
 const loading = ref(false);
 const realtimeRefreshing = ref(false);
 const realtimePollMs = 5000;
-
-const editingPost = ref<FeedItem | null>(null);
-const editText = ref("");
 let feedStream: EventSource | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -108,7 +84,7 @@ const fetchFeed = async (cursor?: string) => {
 };
 
 const refreshFromRealtime = async () => {
-  if (loading.value || realtimeRefreshing.value || editingPost.value) {
+  if (loading.value || realtimeRefreshing.value) {
     return;
   }
   realtimeRefreshing.value = true;
@@ -166,25 +142,7 @@ const loadMore = async () => {
 };
 
 const startEdit = (post: FeedItem) => {
-  editingPost.value = post;
-  editText.value = post.textContent;
-};
-
-const cancelEdit = () => {
-  editingPost.value = null;
-  editText.value = "";
-};
-
-const saveEdit = async () => {
-  if (!editingPost.value) {
-    return;
-  }
-  await $fetch(`/api/posts/${editingPost.value.id}`, {
-    method: "PATCH",
-    body: { textContent: editText.value }
-  });
-  cancelEdit();
-  await fetchFeed();
+  void navigateTo(`/posts/${post.id}/edit`);
 };
 
 const removePost = async (post: FeedItem) => {
@@ -197,8 +155,6 @@ const removePost = async (post: FeedItem) => {
 
 const canEditPost = (post: FeedItem) =>
   post.authorId === auth.user.value?.id || auth.user.value?.role === "ADMIN";
-
-const getEditMaxLen = (type: FeedItem["type"]) => getPostMaxLength(type);
 
 if (!auth.loaded.value) {
   await auth.refresh();

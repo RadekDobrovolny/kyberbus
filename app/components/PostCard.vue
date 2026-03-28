@@ -33,7 +33,7 @@
           @click="openImageModal"
         >
           <img
-            :src="mediaUrl(item.imagePath)"
+            :src="mediaUrl(item.imagePath, item.updatedAt)"
             alt="Instax fotografie"
             class="aspect-square w-full rounded-sm border border-stone-300 object-cover"
           />
@@ -103,7 +103,7 @@
           <XMarkIcon class="h-6 w-6" />
         </button>
         <img
-          :src="mediaUrl(item.imagePath)"
+          :src="mediaUrl(item.imagePath, item.updatedAt)"
           alt="Instax fotografie - detail"
           class="max-h-[92vh] w-full rounded object-contain"
         />
@@ -199,7 +199,8 @@ const paperTextureStyle = computed(() =>
     : undefined
 );
 
-const mediaUrl = (path: string) => `/api/media/${path}`;
+const mediaUrl = (path: string, version?: number) =>
+  version ? `/api/media/${path}?v=${version}` : `/api/media/${path}`;
 const mestoDisplayText = computed(() => props.item.textContent.trim().toLocaleUpperCase("cs-CZ"));
 
 const openImageModal = () => {

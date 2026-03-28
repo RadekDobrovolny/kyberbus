@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const ext = extname(absolutePath).toLowerCase();
   setHeader(event, "content-type", MIME_BY_EXT[ext] || "application/octet-stream");
-  setHeader(event, "cache-control", "public, max-age=86400");
+  setHeader(event, "cache-control", "no-store");
 
   return sendStream(event, createReadStream(absolutePath));
 });

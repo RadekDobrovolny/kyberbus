@@ -38,7 +38,8 @@ export default defineEventHandler(async (event) => {
       type: posts.type,
       textContent: posts.textContent,
       imagePath: posts.imagePath,
-      createdAt: posts.createdAt
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt
     })
     .from(posts)
     .where(eq(posts.authorId, id))

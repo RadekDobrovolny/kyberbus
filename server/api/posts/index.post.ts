@@ -30,6 +30,14 @@ export default defineEventHandler(async (event) => {
   );
 
   const maybeType = String(fields.type || "").toUpperCase();
+  const imageRotationStepsRaw = Number.parseInt(
+    String(fields.imageRotationSteps || fields.imageRotation || "0"),
+    10
+  );
+  const imageRotationSteps =
+    Number.isFinite(imageRotationStepsRaw) && imageRotationStepsRaw >= 0
+      ? imageRotationStepsRaw % 4
+      : 0;
   const ts = Date.now();
   const postId = randomUUID();
 
@@ -65,7 +73,8 @@ export default defineEventHandler(async (event) => {
 
     const stored = await processAndStoreImage(imageFile.data, "instax", {
       mimeType: imageFile.type,
-      fileName: imageFile.filename
+      fileName: imageFile.filename,
+      rotateQuarterTurns: imageRotationSteps
     });
 
     await db.insert(posts).values({

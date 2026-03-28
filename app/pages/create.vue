@@ -62,8 +62,19 @@
           <img
             :src="imagePreviewUrl"
             alt="Náhled vybrané fotky"
-            class="mx-auto max-h-80 w-full rounded object-contain"
+            class="mx-auto max-h-80 w-full rounded object-contain transition-transform duration-150"
+            :style="{ transform: `rotate(${imageRotationDegrees}deg)` }"
           />
+        </div>
+        <div v-if="imagePreviewUrl" class="flex">
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-stone-300 bg-stone-100 text-stone-800 transition-colors hover:bg-stone-200"
+            aria-label="Otočit fotku o 90 stupňů"
+            @click="rotatePreview"
+          >
+            <ArrowPathIcon class="h-5 w-5" />
+          </button>
         </div>
       </template>
 
@@ -103,6 +114,7 @@
 
 <script setup lang="ts">
 import {
+  ArrowPathIcon,
   ArrowUturnLeftIcon,
   CameraIcon,
   DocumentTextIcon,
@@ -143,9 +155,11 @@ const loading = ref(false);
 const error = ref("");
 const route = useRoute();
 let previewRequestId = 0;
+const imageRotationQuarterTurns = ref(0);
 
 const showImageField = computed(() => postTypeRequiresImage(type.value));
 const maxLen = computed(() => getPostMaxLength(type.value));
+const imageRotationDegrees = computed(() => imageRotationQuarterTurns.value * 90);
 
 const normalizeType = (value: unknown): PostType => {
   const maybe = String(value || "").toUpperCase();
@@ -160,6 +174,7 @@ watch(type, () => {
   if (!showImageField.value) {
     imageFile.value = null;
     resetPreviewUrl();
+    imageRotationQuarterTurns.value = 0;
   }
 });
 
@@ -219,6 +234,7 @@ const onFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   const nextFile = input.files?.[0] || null;
   imageFile.value = nextFile;
+  imageRotationQuarterTurns.value = 0;
   resetPreviewUrl();
   if (nextFile) {
     const previewBlob = await toPreviewBlob(nextFile);
@@ -228,6 +244,10 @@ const onFileChange = async (event: Event) => {
     imagePreviewUrl.value = URL.createObjectURL(previewBlob);
   }
   input.value = "";
+};
+
+const rotatePreview = () => {
+  imageRotationQuarterTurns.value = (imageRotationQuarterTurns.value + 1) % 4;
 };
 
 onBeforeUnmount(() => {
@@ -247,6 +267,9 @@ const submit = async () => {
     form.append("textContent", textContent.value);
     if (showImageField.value && imageFile.value) {
       form.append("image", imageFile.value);
+      if (imageRotationQuarterTurns.value !== 0) {
+        form.append("imageRotationSteps", String(imageRotationQuarterTurns.value));
+      }
     }
 
     await $fetch("/api/posts", { method: "POST", body: form });
