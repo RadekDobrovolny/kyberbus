@@ -37,6 +37,7 @@ const ensureDbSchema = (db) => {
       id TEXT PRIMARY KEY NOT NULL,
       login TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'USER',
       short_name TEXT NOT NULL,
       bio TEXT NOT NULL,
       contact TEXT NOT NULL,
@@ -150,8 +151,8 @@ const run = async () => {
   const passwordHash = bcrypt.hashSync("test1234", 10);
   const insertUser = db.prepare(`
     INSERT INTO users (
-      id, login, password_hash, short_name, bio, contact, profile_photo_path, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, login, password_hash, role, short_name, bio, contact, profile_photo_path, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertPost = db.prepare(`
     INSERT INTO posts (
@@ -175,6 +176,7 @@ const run = async () => {
       userId,
       `user${n}`,
       passwordHash,
+      n === 1 ? "ADMIN" : "USER",
       `Účastník ${n}`,
       `Bio uživatele ${n} pro demo feed.`,
       `kontakt-${n}@kyberbus.local`,

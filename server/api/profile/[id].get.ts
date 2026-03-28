@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
   const [profile] = await db
     .select({
       id: users.id,
+      role: users.role,
       shortName: users.shortName,
       bio: users.bio,
       contact: users.contact,

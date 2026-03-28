@@ -55,11 +55,13 @@ export default defineEventHandler(async (event) => {
   });
   const ts = Date.now();
   const userId = randomUUID();
+  const [anyExistingUser] = await db.select({ id: users.id }).from(users).limit(1);
 
   await db.insert(users).values({
     id: userId,
     login: parsed.data.login,
     passwordHash,
+    role: anyExistingUser ? "USER" : "ADMIN",
     shortName: parsed.data.shortName,
     bio: parsed.data.bio,
     contact: parsed.data.contact,

@@ -38,7 +38,7 @@ export const editProfileSchema = z.object({
 });
 
 export const createPostBaseSchema = z.object({
-  type: z.enum(["INSTAX", "LEPIK"]),
+  type: z.enum(["INSTAX", "LEPIK", "DISPECINK", "MESTO"]),
   textContent: z.string().trim()
 });
 
@@ -50,6 +50,16 @@ export const createInstaxSchema = createPostBaseSchema.extend({
 export const createLepikSchema = createPostBaseSchema.extend({
   type: z.literal("LEPIK"),
   textContent: z.string().trim().max(200, "Lepík může mít max 200 znaků")
+});
+
+export const createDispecinkSchema = createPostBaseSchema.extend({
+  type: z.literal("DISPECINK"),
+  textContent: z.string().trim().max(200, "Dispečink může mít max 200 znaků")
+});
+
+export const createMestoSchema = createPostBaseSchema.extend({
+  type: z.literal("MESTO"),
+  textContent: z.string().trim().max(100, "Město může mít max 100 znaků")
 });
 
 export const paginationSchema = z.object({

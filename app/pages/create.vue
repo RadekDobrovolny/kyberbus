@@ -26,9 +26,33 @@
           <DocumentTextIcon class="h-4 w-4" />
           Lepík
         </button>
+        <button
+          v-if="isAdmin"
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-pin transition-colors"
+          :class="type === 'DISPECINK'
+            ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
+            : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
+          @click="type = 'DISPECINK'"
+        >
+          <MegaphoneIcon class="h-4 w-4" />
+          Dispečink
+        </button>
+        <button
+          v-if="isAdmin"
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-pin transition-colors"
+          :class="type === 'MESTO'
+            ? 'bg-accent-500 text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)]'
+            : 'border border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200'"
+          @click="type = 'MESTO'"
+        >
+          <MapPinIcon class="h-4 w-4" />
+          Město
+        </button>
       </div>
 
-      <template v-if="type === 'INSTAX'">
+      <template v-if="showImageField">
         <label class="block text-sm">
           <span class="mb-1 block font-medium text-stone-700">Fotka</span>
           <input type="file" accept="image/*" class="w-full rounded border border-stone-300 p-2" @change="onFileChange" />
@@ -82,14 +106,30 @@ import {
   ArrowUturnLeftIcon,
   CameraIcon,
   DocumentTextIcon,
+  MapPinIcon,
+  MegaphoneIcon,
   PaperAirplaneIcon
 } from "@heroicons/vue/24/outline";
+import {
+  canCreatePostType,
+  getPostMaxLength,
+  isPostType,
+  postTypeRequiresImage,
+  type PostType
+} from "~~/shared/content";
 
 definePageMeta({
   middleware: "auth"
 });
 
-const type = ref<"INSTAX" | "LEPIK">("INSTAX");
+const auth = useAuth();
+if (!auth.loaded.value) {
+  await auth.refresh();
+}
+
+const isAdmin = computed(() => auth.user.value?.role === "ADMIN");
+const userRole = computed(() => auth.user.value?.role || "USER");
+const type = ref<PostType>("INSTAX");
 const textContent = ref("");
 const imageFile = ref<File | null>(null);
 const imagePreviewUrl = ref<string | null>(null);
@@ -104,15 +144,23 @@ const error = ref("");
 const route = useRoute();
 let previewRequestId = 0;
 
-const maxLen = computed(() => (type.value === "INSTAX" ? 50 : 200));
+const showImageField = computed(() => postTypeRequiresImage(type.value));
+const maxLen = computed(() => getPostMaxLength(type.value));
 
-const normalizeType = (value: unknown): "INSTAX" | "LEPIK" => {
+const normalizeType = (value: unknown): PostType => {
   const maybe = String(value || "").toUpperCase();
-  return maybe === "LEPIK" ? "LEPIK" : "INSTAX";
+  if (!isPostType(maybe)) {
+    return "INSTAX";
+  }
+  return canCreatePostType(userRole.value, maybe) ? maybe : "INSTAX";
 };
 
 watch(type, () => {
   textContent.value = textContent.value.slice(0, maxLen.value);
+  if (!showImageField.value) {
+    imageFile.value = null;
+    resetPreviewUrl();
+  }
 });
 
 watch(
@@ -190,14 +238,14 @@ const submit = async () => {
   loading.value = true;
   error.value = "";
   try {
-    if (type.value === "INSTAX" && !imageFile.value) {
-      throw new Error("Instax vyžaduje fotku.");
+    if (showImageField.value && !imageFile.value) {
+      throw new Error(`${type.value === "INSTAX" ? "Instax" : "Příspěvek"} vyžaduje fotku.`);
     }
 
     const form = new FormData();
     form.append("type", type.value);
     form.append("textContent", textContent.value);
-    if (type.value === "INSTAX" && imageFile.value) {
+    if (showImageField.value && imageFile.value) {
       form.append("image", imageFile.value);
     }
 

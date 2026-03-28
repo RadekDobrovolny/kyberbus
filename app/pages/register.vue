@@ -45,6 +45,16 @@
           @change="onFileChange"
         />
       </label>
+      <div v-if="photoPreviewUrl" class="rounded border border-stone-300 bg-stone-50 p-2">
+        <img
+          :src="photoPreviewUrl"
+          alt="Náhled profilové fotky"
+          class="mx-auto max-h-72 w-full rounded object-contain"
+        />
+      </div>
+      <p v-else-if="profilePhoto" class="text-xs text-stone-600">
+        Vybráno: {{ profilePhoto.name }}
+      </p>
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
 
@@ -87,14 +97,78 @@ const shortName = ref("");
 const bio = ref("");
 const contact = ref("");
 const profilePhoto = ref<File | null>(null);
+const photoPreviewUrl = ref<string | null>(null);
 const loading = ref(false);
 const error = ref("");
+let previewRequestId = 0;
 
-const onFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  profilePhoto.value = input.files?.[0] || null;
-  input.value = "";
+const HEIC_MIME_TYPES = new Set([
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence"
+]);
+
+const resetPreviewUrl = () => {
+  if (!photoPreviewUrl.value) {
+    return;
+  }
+  URL.revokeObjectURL(photoPreviewUrl.value);
+  photoPreviewUrl.value = null;
 };
+
+const isHeicFile = (file: File) => {
+  const lowerName = file.name.toLowerCase();
+  const lowerType = file.type.toLowerCase();
+  return (
+    HEIC_MIME_TYPES.has(lowerType) ||
+    lowerName.endsWith(".heic") ||
+    lowerName.endsWith(".heif")
+  );
+};
+
+const toPreviewBlob = async (file: File): Promise<Blob> => {
+  if (!isHeicFile(file)) {
+    return file;
+  }
+
+  try {
+    const heic2any = await import("heic2any");
+    const converted = await heic2any.default({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9
+    });
+
+    if (Array.isArray(converted)) {
+      return converted[0] || file;
+    }
+
+    return converted;
+  } catch (cause) {
+    console.warn("HEIC preview conversion failed during registration.", cause);
+    return file;
+  }
+};
+
+const onFileChange = async (event: Event) => {
+  const requestId = ++previewRequestId;
+  const input = event.target as HTMLInputElement;
+  const nextFile = input.files?.[0] || null;
+  profilePhoto.value = nextFile;
+  resetPreviewUrl();
+  if (nextFile) {
+    const previewBlob = await toPreviewBlob(nextFile);
+    if (requestId !== previewRequestId) {
+      return;
+    }
+    photoPreviewUrl.value = URL.createObjectURL(previewBlob);
+  }
+};
+
+onBeforeUnmount(() => {
+  resetPreviewUrl();
+});
 
 const submit = async () => {
   if (!profilePhoto.value) {

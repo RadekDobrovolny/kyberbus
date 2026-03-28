@@ -4,6 +4,7 @@ export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   login: text("login").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  role: text("role", { enum: ["USER", "ADMIN"] }).notNull().default("USER"),
   shortName: text("short_name").notNull(),
   bio: text("bio").notNull(),
   contact: text("contact").notNull(),
@@ -36,7 +37,7 @@ export const posts = sqliteTable(
     authorId: text("author_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type", { enum: ["INSTAX", "LEPIK"] }).notNull(),
+    type: text("type", { enum: ["INSTAX", "LEPIK", "DISPECINK", "MESTO"] }).notNull(),
     textContent: text("text_content").notNull(),
     imagePath: text("image_path"),
     createdAt: integer("created_at").notNull(),

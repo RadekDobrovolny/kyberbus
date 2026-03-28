@@ -43,6 +43,14 @@
         </p>
       </template>
 
+      <template v-else-if="isMesto">
+        <div class="flex min-h-[9.5rem] items-center justify-center rounded-[0.9rem] border-[6.5px] border-black bg-white px-5 py-8 text-center">
+          <p class="roboto-condensed-sign break-words text-5xl uppercase leading-tight tracking-[0.08em] text-black md:text-6xl">
+            {{ mestoDisplayText }}
+          </p>
+        </div>
+      </template>
+
       <template v-else>
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
@@ -120,6 +128,7 @@ defineEmits<{
 
 const isLepik = computed(() => props.item.type === "LEPIK");
 const isInstax = computed(() => props.item.type === "INSTAX");
+const isMesto = computed(() => props.item.type === "MESTO");
 const isImageModalOpen = ref(false);
 
 const hashId = (id: string) =>
@@ -143,6 +152,10 @@ const instaxAngle = computed(() => {
   const angles = [-2, -1, 1, 2];
   return angles[hashId(props.item.id) % angles.length];
 });
+const mestoAngle = computed(() => {
+  const angles = [-1, 0, 1];
+  return angles[hashId(props.item.id) % angles.length];
+});
 
 const lepikColorClass = computed(
   () => lepikPalette[hashId(props.item.id) % lepikPalette.length]
@@ -151,6 +164,9 @@ const lepikColorClass = computed(
 const cardClass = computed(() => {
   if (isInstax.value) {
     return "relative mx-auto mb-20 w-full max-w-[26rem] overflow-hidden rounded-[0.2rem] border border-stone-300 bg-white p-6 pb-8 shadow-[0_18px_30px_rgba(0,0,0,0.16),0_4px_10px_rgba(0,0,0,0.12)]";
+  }
+  if (isMesto.value) {
+    return "relative mx-auto mb-20 w-full max-w-[30rem] overflow-hidden rounded-xl border border-stone-300 bg-white p-2 shadow-[0_14px_24px_rgba(0,0,0,0.14),0_3px_10px_rgba(0,0,0,0.1)]";
   }
 
   return `relative mx-auto mb-20 flex aspect-square w-full max-w-[22rem] flex-col overflow-hidden rounded-sm border border-stone-300/80 p-4 transition-transform duration-200 hover:scale-[1.01] ${lepikColorClass.value}`;
@@ -166,6 +182,10 @@ const cardStyle = computed(() =>
       ? {
           transform: `rotate(${instaxAngle.value}deg)`
         }
+    : isMesto.value
+      ? {
+          transform: `rotate(${mestoAngle.value}deg)`
+        }
     : undefined
 );
 
@@ -180,6 +200,7 @@ const paperTextureStyle = computed(() =>
 );
 
 const mediaUrl = (path: string) => `/api/media/${path}`;
+const mestoDisplayText = computed(() => props.item.textContent.trim().toLocaleUpperCase("cs-CZ"));
 
 const openImageModal = () => {
   if (!props.item.imagePath) {

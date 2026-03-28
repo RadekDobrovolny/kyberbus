@@ -1,6 +1,8 @@
 <template>
   <section class="mx-auto max-w-xl rounded-xl border border-stone-300 bg-white p-6 shadow-pin">
-    <h1 class="mb-4 text-xl font-black text-stone-900">Upravit profil</h1>
+    <h1 class="mb-4 text-xl font-black text-stone-900">
+      {{ isEditingOwnProfile ? "Upravit profil" : "Upravit profil uživatele" }}
+    </h1>
     <form class="space-y-4" @submit.prevent="submit">
       <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Jméno</span>
@@ -61,6 +63,8 @@ definePageMeta({
 });
 
 const auth = useAuth();
+const route = useRoute();
+const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const shortName = ref("");
 const bio = ref("");
 const contact = ref("");
@@ -68,13 +72,46 @@ const photoFile = ref<File | null>(null);
 const loading = ref(false);
 const error = ref("");
 const success = ref(false);
-const backTo = computed(() => auth.user.value ? `/profile/${auth.user.value.id}` : "/");
+const requestedUserId = computed(() => {
+  const queryId = route.query.userId;
+  return typeof queryId === "string" && queryId.trim().length > 0 ? queryId : null;
+});
+const editingUserId = computed(() => {
+  if (!auth.user.value) {
+    return null;
+  }
+  if (auth.user.value.role === "ADMIN" && requestedUserId.value) {
+    return requestedUserId.value;
+  }
+  return auth.user.value.id;
+});
+const isEditingOwnProfile = computed(
+  () => Boolean(auth.user.value && editingUserId.value && auth.user.value.id === editingUserId.value)
+);
+const backTo = computed(() => (editingUserId.value ? `/profile/${editingUserId.value}` : "/"));
 
 await auth.refresh();
-if (auth.user.value) {
+if (!auth.user.value) {
+  await navigateTo("/login");
+}
+
+if (auth.user.value && editingUserId.value === auth.user.value.id) {
   shortName.value = auth.user.value.shortName;
   bio.value = auth.user.value.bio;
   contact.value = auth.user.value.contact;
+} else if (editingUserId.value) {
+  try {
+    const result = await $fetch<{
+      profile: { shortName: string; bio: string; contact: string };
+    }>(`/api/profile/${editingUserId.value}`, {
+      headers: authHeaders
+    });
+    shortName.value = result.profile.shortName;
+    bio.value = result.profile.bio;
+    contact.value = result.profile.contact;
+  } catch {
+    error.value = "Profil se nepodařilo načíst.";
+  }
 }
 
 const onFileChange = (event: Event) => {
@@ -89,6 +126,9 @@ const submit = async () => {
   success.value = false;
 
   try {
+    if (!editingUserId.value) {
+      throw new Error("Chybí cílový profil.");
+    }
     const form = new FormData();
     form.append("shortName", shortName.value);
     form.append("bio", bio.value);
@@ -97,12 +137,19 @@ const submit = async () => {
       form.append("profilePhoto", photoFile.value);
     }
 
-    await $fetch("/api/profile/me", {
+    const endpoint =
+      isEditingOwnProfile.value || !auth.user.value
+        ? "/api/profile/me"
+        : `/api/profile/${editingUserId.value}`;
+
+    await $fetch(endpoint, {
       method: "PATCH",
       body: form
     });
 
-    await auth.refresh();
+    if (isEditingOwnProfile.value) {
+      await auth.refresh();
+    }
     success.value = true;
   } catch (err: any) {
     error.value = err?.data?.statusMessage || "Nepodařilo se uložit profil.";

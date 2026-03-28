@@ -1,6 +1,7 @@
 export type AuthUser = {
   id: string;
   login: string;
+  role: "USER" | "ADMIN";
   shortName: string;
   bio: string;
   contact: string;
@@ -10,7 +11,7 @@ export type AuthUser = {
 
 export type FeedItem = {
   id: string;
-  type: "INSTAX" | "LEPIK";
+  type: "INSTAX" | "LEPIK" | "DISPECINK" | "MESTO";
   textContent: string;
   imagePath: string | null;
   createdAt: number;

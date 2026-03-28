@@ -1,9 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createError, getRouterParam } from "h3";
 import { existsSync, unlinkSync } from "node:fs";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts } from "~~/server/db/schema";
-import { requireUser } from "~~/server/utils/auth";
+import { isAdmin, requireUser } from "~~/server/utils/auth";
 import { publishFeedUpdate } from "~~/server/utils/feed-events";
 import { getAbsoluteUploadPath } from "~~/server/utils/uploads";
 
@@ -20,17 +20,22 @@ export default defineEventHandler(async (event) => {
   const [existing] = await db
     .select({
       id: posts.id,
+      authorId: posts.authorId,
       imagePath: posts.imagePath
     })
     .from(posts)
-    .where(and(eq(posts.id, postId), eq(posts.authorId, user.id)))
+    .where(eq(posts.id, postId))
     .limit(1);
 
   if (!existing) {
     throw createError({ statusCode: 404, statusMessage: "Příspěvek nebyl nalezen." });
   }
 
-  await db.delete(posts).where(and(eq(posts.id, postId), eq(posts.authorId, user.id)));
+  if (!isAdmin(user) && existing.authorId !== user.id) {
+    throw createError({ statusCode: 403, statusMessage: "Tento příspěvek nemůžeš smazat." });
+  }
+
+  await db.delete(posts).where(eq(posts.id, postId));
 
   if (existing.imagePath) {
     const path = getAbsoluteUploadPath(existing.imagePath);

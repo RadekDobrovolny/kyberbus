@@ -1,10 +1,11 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createError, readBody } from "h3";
 import { getRouterParam } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { posts } from "~~/server/db/schema";
-import { requireUser } from "~~/server/utils/auth";
+import { isAdmin, requireUser } from "~~/server/utils/auth";
 import { publishFeedUpdate } from "~~/server/utils/feed-events";
+import { getPostMaxLength } from "~~/shared/content";
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event);
@@ -23,16 +24,20 @@ export default defineEventHandler(async (event) => {
       type: posts.type
     })
     .from(posts)
-    .where(and(eq(posts.id, postId), eq(posts.authorId, user.id)))
+    .where(eq(posts.id, postId))
     .limit(1);
 
   if (!existing) {
     throw createError({ statusCode: 404, statusMessage: "Příspěvek nebyl nalezen." });
   }
 
+  if (!isAdmin(user) && existing.authorId !== user.id) {
+    throw createError({ statusCode: 403, statusMessage: "Tento příspěvek nemůžeš upravit." });
+  }
+
   const body = await readBody(event);
   const textContent = String(body?.textContent || "").trim();
-  const maxLen = existing.type === "INSTAX" ? 50 : 200;
+  const maxLen = getPostMaxLength(existing.type);
 
   if (textContent.length > maxLen) {
     throw createError({
@@ -47,7 +52,7 @@ export default defineEventHandler(async (event) => {
       textContent,
       updatedAt: Date.now()
     })
-    .where(and(eq(posts.id, postId), eq(posts.authorId, user.id)));
+    .where(eq(posts.id, postId));
 
   publishFeedUpdate("updated", postId);
   return { ok: true };

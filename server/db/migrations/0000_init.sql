@@ -2,6 +2,7 @@ CREATE TABLE `users` (
 	`id` text PRIMARY KEY NOT NULL,
 	`login` text NOT NULL,
 	`password_hash` text NOT NULL,
+	`role` text DEFAULT 'USER' NOT NULL,
 	`short_name` text NOT NULL,
 	`bio` text NOT NULL,
 	`contact` text NOT NULL,

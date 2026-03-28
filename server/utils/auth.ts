@@ -4,6 +4,7 @@ import type { H3Event } from "h3";
 import { createError, deleteCookie, getCookie, setCookie } from "h3";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { sessions, users } from "~~/server/db/schema";
+import { normalizeUserRole } from "~~/shared/content";
 
 const now = () => Date.now();
 
@@ -99,6 +100,7 @@ export const getCurrentUser = async (event: H3Event) => {
     .select({
       id: users.id,
       login: users.login,
+      role: users.role,
       shortName: users.shortName,
       bio: users.bio,
       contact: users.contact,
@@ -116,10 +118,21 @@ export const getCurrentUser = async (event: H3Event) => {
   return user;
 };
 
+export const isAdmin = (user: { role?: string | null }) =>
+  normalizeUserRole(user.role) === "ADMIN";
+
 export const requireUser = async (event: H3Event) => {
   const user = await getCurrentUser(event);
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: "Nejprve se přihlas." });
+  }
+  return user;
+};
+
+export const requireAdmin = async (event: H3Event) => {
+  const user = await requireUser(event);
+  if (!isAdmin(user)) {
+    throw createError({ statusCode: 403, statusMessage: "Tato akce je pouze pro admina." });
   }
   return user;
 };

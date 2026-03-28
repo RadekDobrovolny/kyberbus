@@ -30,10 +30,10 @@
       <textarea
         v-model="editText"
         class="min-h-24 w-full rounded border border-stone-300 bg-stone-50 p-2 text-sm"
-        :maxlength="editingPost.type === 'INSTAX' ? 50 : 200"
+        :maxlength="getEditMaxLen(editingPost.type)"
       />
       <div class="mt-2 text-xs text-stone-600">
-        {{ editText.length }} / {{ editingPost.type === "INSTAX" ? 50 : 200 }}
+        {{ editText.length }} / {{ getEditMaxLen(editingPost.type) }}
       </div>
       <div class="mt-3 flex gap-2">
         <button class="rounded bg-accent-500 px-3 py-1.5 text-sm font-semibold text-white" @click="saveEdit">
@@ -49,7 +49,7 @@
       v-for="item in items"
       :key="item.id"
       :item="item"
-      :editable="item.authorId === auth.user.value.id"
+      :editable="canEditPost(item)"
       @edit="startEdit"
       @remove="removePost"
     />
@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import type { FeedItem } from "~/types/models";
+import { getPostMaxLength } from "~~/shared/content";
 
 const auth = useAuth();
 const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
@@ -193,6 +194,11 @@ const removePost = async (post: FeedItem) => {
   await $fetch(`/api/posts/${post.id}`, { method: "DELETE" });
   await fetchFeed();
 };
+
+const canEditPost = (post: FeedItem) =>
+  post.authorId === auth.user.value?.id || auth.user.value?.role === "ADMIN";
+
+const getEditMaxLen = (type: FeedItem["type"]) => getPostMaxLength(type);
 
 if (!auth.loaded.value) {
   await auth.refresh();

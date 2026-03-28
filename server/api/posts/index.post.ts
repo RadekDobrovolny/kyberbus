@@ -5,7 +5,13 @@ import { posts } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
 import { publishFeedUpdate } from "~~/server/utils/feed-events";
 import { processAndStoreImage, validateImageInput } from "~~/server/utils/uploads";
-import { createInstaxSchema, createLepikSchema } from "~~/server/utils/validation";
+import {
+  createDispecinkSchema,
+  createInstaxSchema,
+  createLepikSchema,
+  createMestoSchema
+} from "~~/server/utils/validation";
+import { canCreatePostType, isPostType } from "~~/shared/content";
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event);
@@ -23,9 +29,19 @@ export default defineEventHandler(async (event) => {
       .map((item) => [item.name || "", item.data.toString("utf8")])
   );
 
-  const type = String(fields.type || "");
+  const maybeType = String(fields.type || "").toUpperCase();
   const ts = Date.now();
   const postId = randomUUID();
+
+  if (!isPostType(maybeType)) {
+    throw createError({ statusCode: 400, statusMessage: "Neznámý typ příspěvku." });
+  }
+
+  if (!canCreatePostType(user.role, maybeType)) {
+    throw createError({ statusCode: 403, statusMessage: "Tento typ příspěvku je jen pro admina." });
+  }
+
+  const type = maybeType;
 
   if (type === "INSTAX") {
     const parsed = createInstaxSchema.safeParse({
@@ -93,5 +109,59 @@ export default defineEventHandler(async (event) => {
     return { ok: true, id: postId };
   }
 
-  throw createError({ statusCode: 400, statusMessage: "Neznámý typ příspěvku." });
+  if (type === "DISPECINK") {
+    const parsed = createDispecinkSchema.safeParse({
+      type,
+      textContent: fields.textContent || ""
+    });
+
+    if (!parsed.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: parsed.error.issues[0]?.message || "Neplatný Dispečink příspěvek."
+      });
+    }
+
+    await db.insert(posts).values({
+      id: postId,
+      authorId: user.id,
+      type: "DISPECINK",
+      textContent: parsed.data.textContent,
+      imagePath: null,
+      createdAt: ts,
+      updatedAt: ts
+    });
+
+    publishFeedUpdate("created", postId);
+    return { ok: true, id: postId };
+  }
+
+  if (type === "MESTO") {
+    const parsed = createMestoSchema.safeParse({
+      type,
+      textContent: fields.textContent || ""
+    });
+
+    if (!parsed.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: parsed.error.issues[0]?.message || "Neplatný Město příspěvek."
+      });
+    }
+
+    await db.insert(posts).values({
+      id: postId,
+      authorId: user.id,
+      type: "MESTO",
+      textContent: parsed.data.textContent,
+      imagePath: null,
+      createdAt: ts,
+      updatedAt: ts
+    });
+
+    publishFeedUpdate("created", postId);
+    return { ok: true, id: postId };
+  }
+
+  throw createError({ statusCode: 400, statusMessage: "Neplatný typ příspěvku." });
 });
