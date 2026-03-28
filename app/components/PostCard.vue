@@ -133,15 +133,9 @@
             <p v-if="kdoParticipantsState.length === 0" class="mt-3 text-sm text-stone-600">
               Zatím nikdo.
             </p>
-            <ul v-else class="mt-3 space-y-1">
-              <li
-                v-for="participant in kdoParticipantsState"
-                :key="participant.userId"
-                class="text-sm font-medium text-stone-800"
-              >
-                {{ participant.shortName }}
-              </li>
-            </ul>
+            <p v-else class="mt-3 text-sm font-medium text-stone-800">
+              {{ kdoParticipantsList }}
+            </p>
           </div>
         </div>
       </template>
@@ -285,6 +279,9 @@ const reactionState = ref<{
 });
 const kdoParticipantsState = ref<KdoParticipant[]>([]);
 const viewerJoinedKdoState = ref(false);
+const kdoParticipantsList = computed(() =>
+  kdoParticipantsState.value.map((participant) => participant.shortName).join(", ")
+);
 
 const snapshotReactionState = () => ({
   reactions: { ...reactionState.value.reactions },
