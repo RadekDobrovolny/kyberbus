@@ -67,13 +67,13 @@
           class="flex items-center gap-3 rounded-lg border px-4 py-3"
           :class="isImportantAnnouncement
             ? 'border-red-300 bg-red-50'
-            : 'border-stone-300 bg-stone-50'"
+            : 'border-blue-300 bg-blue-50'"
         >
           <div
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
             :class="isImportantAnnouncement
               ? 'border-red-300 bg-red-100'
-              : 'border-stone-300 bg-white'"
+              : 'border-blue-300 bg-blue-100'"
           >
             <span
               v-if="isImportantAnnouncement"
@@ -82,13 +82,27 @@
             >
               !
             </span>
-            <MegaphoneIcon v-else class="h-5 w-5 text-stone-700" />
+            <MegaphoneIcon v-else class="h-5 w-5 text-blue-700" />
           </div>
           <p
-            class="min-w-0 flex-1 whitespace-pre-wrap font-mono text-[1rem] leading-relaxed"
-            :class="isImportantAnnouncement ? 'text-red-950' : 'text-stone-800'"
+            class="min-w-0 flex-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] font-mono text-[1rem] leading-relaxed"
+            :class="isImportantAnnouncement ? 'text-red-950' : 'text-blue-950'"
           >
-            {{ item.textContent }}
+            <template v-for="(segment, index) in textContentSegments" :key="`notice-${segment.kind}-${index}`">
+              <a
+                v-if="segment.kind === 'link'"
+                :href="segment.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="break-all underline underline-offset-2"
+                :class="isImportantAnnouncement
+                  ? 'text-red-800 decoration-red-700/70 hover:text-red-900'
+                  : 'text-accent-700 decoration-accent-500/70 hover:text-accent-800'"
+              >
+                {{ segment.value }}
+              </a>
+              <span v-else>{{ segment.value }}</span>
+            </template>
           </p>
         </div>
       </template>
@@ -150,10 +164,21 @@
             />
             <span class="font-semibold text-stone-800">{{ item.authorShortName }}</span>
           </NuxtLink>
-          <span class="text-xs text-stone-600">{{ formatDate(item.createdAt) }}</span>
+            <span class="text-xs text-stone-600">{{ formatDate(item.createdAt) }}</span>
         </div>
-        <p class="gloria-hallelujah-regular flex-1 whitespace-pre-wrap text-xl leading-snug text-stone-800/95">
-          {{ item.textContent }}
+        <p class="gloria-hallelujah-regular flex-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-xl leading-snug text-stone-800/95">
+          <template v-for="(segment, index) in textContentSegments" :key="`lepik-${segment.kind}-${index}`">
+            <a
+              v-if="segment.kind === 'link'"
+              :href="segment.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="break-all text-accent-700 underline decoration-accent-500/70 underline-offset-2 hover:text-accent-800"
+            >
+              {{ segment.value }}
+            </a>
+            <span v-else>{{ segment.value }}</span>
+          </template>
         </p>
       </template>
 
@@ -261,6 +286,9 @@ const isMesto = computed(() => props.item.type === "MESTO");
 const isImportantAnnouncement = computed(
   () => isAnnouncement.value && props.item.noticeLevel === "IMPORTANT"
 );
+type LepikTextSegment =
+  | { kind: "text"; value: string }
+  | { kind: "link"; value: string; href: string };
 const isImageModalOpen = ref(false);
 const pendingKdoToggle = ref(false);
 const reactionButtons: Array<{ type: ReactionType; key: ReactionKey; emoji: string }> = [
@@ -285,6 +313,64 @@ const viewerJoinedKdoState = ref(false);
 const kdoParticipantsList = computed(() =>
   kdoParticipantsState.value.map((participant) => participant.shortName).join(", ")
 );
+
+const URL_MATCHER = /(?:https?:\/\/|www\.)[^\s]+/gi;
+const TRAILING_URL_PUNCTUATION = new Set([".", ",", "!", "?", ";", ":", ")", "]"]);
+
+const stripTrailingUrlPunctuation = (raw: string) => {
+  let url = raw;
+  let trailing = "";
+  while (url.length > 0) {
+    const lastChar = url[url.length - 1];
+    if (!lastChar || !TRAILING_URL_PUNCTUATION.has(lastChar)) {
+      break;
+    }
+    trailing = `${lastChar}${trailing}`;
+    url = url.slice(0, -1);
+  }
+  return { url, trailing };
+};
+
+const normalizeHref = (url: string) =>
+  /^https?:\/\//i.test(url) ? url : `https://${url}`;
+
+const splitTextToSegments = (text: string): LepikTextSegment[] => {
+  const segments: LepikTextSegment[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null = null;
+  const matcher = new RegExp(URL_MATCHER);
+
+  while ((match = matcher.exec(text)) !== null) {
+    const rawMatch = match[0];
+    if (!rawMatch) {
+      continue;
+    }
+    const start = match.index;
+    if (start > lastIndex) {
+      segments.push({ kind: "text", value: text.slice(lastIndex, start) });
+    }
+
+    const { url, trailing } = stripTrailingUrlPunctuation(rawMatch);
+    if (url.length > 0) {
+      segments.push({ kind: "link", value: url, href: normalizeHref(url) });
+    } else {
+      segments.push({ kind: "text", value: rawMatch });
+    }
+    if (trailing.length > 0) {
+      segments.push({ kind: "text", value: trailing });
+    }
+
+    lastIndex = start + rawMatch.length;
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ kind: "text", value: text.slice(lastIndex) });
+  }
+
+  return segments;
+};
+
+const textContentSegments = computed(() => splitTextToSegments(props.item.textContent));
 
 const snapshotReactionState = () => ({
   reactions: { ...reactionState.value.reactions },
