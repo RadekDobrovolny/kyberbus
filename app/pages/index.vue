@@ -44,10 +44,30 @@
         Načíst další
       </button>
     </div>
+
+    <Transition
+      enter-active-class="transition-all duration-200"
+      enter-from-class="translate-y-2 opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition-all duration-150"
+      leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-2 opacity-0"
+    >
+      <button
+        v-if="showScrollTopBubble"
+        type="button"
+        class="fixed right-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-pin transition-transform hover:scale-105 lg:right-auto lg:left-[calc(50%+29rem)]"
+        aria-label="Zpět na začátek feedu"
+        @click="scrollToFeedTop"
+      >
+        <ArrowUpIcon class="h-6 w-6" />
+      </button>
+    </Transition>
   </section>
 </template>
 
 <script setup lang="ts">
+import { ArrowUpIcon } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
 
 const auth = useAuth();
@@ -56,9 +76,22 @@ const items = ref<FeedItem[]>([]);
 const nextCursor = ref<string | null>(null);
 const loading = ref(false);
 const realtimeRefreshing = ref(false);
+const showScrollTopBubble = ref(false);
 const realtimePollMs = 5000;
+const scrollTopThresholdPx = 320;
 let feedStream: EventSource | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+const updateScrollTopBubbleVisibility = () => {
+  if (!import.meta.client) {
+    return;
+  }
+  showScrollTopBubble.value = window.scrollY > scrollTopThresholdPx;
+};
+
+const handleWindowScroll = () => {
+  updateScrollTopBubbleVisibility();
+};
 
 const fetchFeed = async (cursor?: string, options?: { silent?: boolean }) => {
   const silent = Boolean(options?.silent);
@@ -146,6 +179,13 @@ const loadMore = async () => {
   await fetchFeed(nextCursor.value);
 };
 
+const scrollToFeedTop = () => {
+  if (!import.meta.client) {
+    return;
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
 const startEdit = (post: FeedItem) => {
   void navigateTo(`/posts/${post.id}/edit`);
 };
@@ -169,6 +209,11 @@ if (auth.user.value) {
 }
 
 if (import.meta.client) {
+  onMounted(() => {
+    updateScrollTopBubbleVisibility();
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+  });
+
   watch(
     () => auth.user.value?.id,
     (id) => {
@@ -184,6 +229,7 @@ if (import.meta.client) {
   );
 
   onBeforeUnmount(() => {
+    window.removeEventListener("scroll", handleWindowScroll);
     closeFeedStream();
     stopRealtimePolling();
   });
