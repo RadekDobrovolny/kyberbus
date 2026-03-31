@@ -10,6 +10,7 @@ export const users = sqliteTable("users", {
   contact: text("contact").notNull(),
   profilePhotoPath: text("profile_photo_path").notNull(),
   createdAt: integer("created_at").notNull(),
+  lastActiveAt: integer("last_active_at"),
   updatedAt: integer("updated_at").notNull()
 });
 

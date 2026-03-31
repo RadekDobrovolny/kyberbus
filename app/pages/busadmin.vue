@@ -59,6 +59,7 @@
               <p class="truncate text-base font-semibold text-stone-900">{{ item.shortName }}</p>
               <p class="truncate text-sm text-stone-600">{{ item.login }}</p>
               <p class="text-xs text-stone-500">ID: {{ item.id }}</p>
+              <p class="text-xs text-stone-500">Aktivita: {{ formatLastActive(item.lastActiveAt) }}</p>
             </div>
           </div>
 
@@ -137,6 +138,7 @@ type AdminUser = {
   contact: string;
   profilePhotoPath: string;
   createdAt: number;
+  lastActiveAt: number | null;
   updatedAt: number;
 };
 
@@ -154,6 +156,18 @@ const loading = ref(false);
 const error = ref("");
 
 const mediaUrl = (path: string) => `/api/media/${path}`;
+const formatLastActive = (stamp: number | null) => {
+  if (!stamp) {
+    return "zatím nezaznamenána";
+  }
+  return new Date(stamp).toLocaleString("cs-CZ", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
 
 const enrich = (items: AdminUser[]) =>
   items.map((item) => ({

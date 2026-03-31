@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
       contact: users.contact,
       profilePhotoPath: users.profilePhotoPath,
       createdAt: users.createdAt,
+      lastActiveAt: users.lastActiveAt,
       updatedAt: users.updatedAt
     })
     .from(users)

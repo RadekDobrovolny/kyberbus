@@ -77,6 +77,7 @@ export const ensureSchema = () => {
       contact TEXT NOT NULL,
       profile_photo_path TEXT NOT NULL,
       created_at INTEGER NOT NULL,
+      last_active_at INTEGER,
       updated_at INTEGER NOT NULL
     );
   `);
@@ -87,8 +88,16 @@ export const ensureSchema = () => {
       throw error;
     }
   }
+  try {
+    db.run(sql`ALTER TABLE users ADD COLUMN last_active_at INTEGER;`);
+  } catch (error) {
+    if (!isDuplicateColumnError(error, "last_active_at")) {
+      throw error;
+    }
+  }
   db.run(sql`UPDATE users SET role = 'USER' WHERE role IS NULL OR role = '';`);
   db.run(sql`UPDATE users SET role = 'USER' WHERE role NOT IN ('USER', 'ADMIN');`);
+  db.run(sql`UPDATE users SET last_active_at = created_at WHERE last_active_at IS NULL;`);
   db.run(
     sql`UPDATE users
         SET role = 'ADMIN'

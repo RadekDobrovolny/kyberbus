@@ -7,6 +7,7 @@ import { sessions, users } from "~~/server/db/schema";
 import { normalizeUserRole } from "~~/shared/content";
 
 const now = () => Date.now();
+const LAST_ACTIVE_TOUCH_INTERVAL_MS = 60_000;
 
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
@@ -41,15 +42,20 @@ export const createSession = async (event: H3Event, userId: string) => {
   const runtime = useRuntimeConfig();
   const token = randomBytes(32).toString("hex");
   const tokenHash = hashToken(token);
-  const expiresAt = now() + runtime.sessionMaxAgeSeconds * 1000;
+  const ts = now();
+  const expiresAt = ts + runtime.sessionMaxAgeSeconds * 1000;
 
   await db.insert(sessions).values({
     id: randomBytes(16).toString("hex"),
     tokenHash,
     userId,
     expiresAt,
-    createdAt: now()
+    createdAt: ts
   });
+  await db
+    .update(users)
+    .set({ lastActiveAt: ts })
+    .where(eq(users.id, userId));
 
   setCookie(event, runtime.sessionCookieName, token, {
     httpOnly: true,
@@ -105,7 +111,8 @@ export const getCurrentUser = async (event: H3Event) => {
       bio: users.bio,
       contact: users.contact,
       profilePhotoPath: users.profilePhotoPath,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
+      lastActiveAt: users.lastActiveAt
     })
     .from(users)
     .where(eq(users.id, session.userId))
@@ -113,6 +120,17 @@ export const getCurrentUser = async (event: H3Event) => {
 
   if (!user) {
     return null;
+  }
+
+  const ts = now();
+  const shouldTouchLastActive =
+    !user.lastActiveAt || ts - user.lastActiveAt >= LAST_ACTIVE_TOUCH_INTERVAL_MS;
+  if (shouldTouchLastActive) {
+    await db
+      .update(users)
+      .set({ lastActiveAt: ts })
+      .where(eq(users.id, user.id));
+    user.lastActiveAt = ts;
   }
 
   return user;
