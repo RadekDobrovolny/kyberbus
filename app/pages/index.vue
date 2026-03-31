@@ -179,11 +179,11 @@ const loadMore = async () => {
   await fetchFeed(nextCursor.value);
 };
 
-const scrollToFeedTop = () => {
+const scrollToFeedTop = (smooth = true) => {
   if (!import.meta.client) {
     return;
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
 };
 
 const startEdit = (post: FeedItem) => {
@@ -210,6 +210,10 @@ if (auth.user.value) {
 
 if (import.meta.client) {
   onMounted(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    scrollToFeedTop(false);
     updateScrollTopBubbleVisibility();
     window.addEventListener("scroll", handleWindowScroll, { passive: true });
   });
@@ -229,6 +233,9 @@ if (import.meta.client) {
   );
 
   onBeforeUnmount(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "auto";
+    }
     window.removeEventListener("scroll", handleWindowScroll);
     closeFeedStream();
     stopRealtimePolling();

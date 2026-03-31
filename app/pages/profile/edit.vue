@@ -23,6 +23,19 @@
       </label>
 
       <label class="block text-sm">
+        <span class="mb-1 block font-medium text-stone-700">Nové heslo (volitelné)</span>
+        <input
+          v-model="newPassword"
+          type="password"
+          autocomplete="new-password"
+          class="w-full rounded border border-stone-300 p-2"
+          minlength="6"
+          maxlength="100"
+        />
+        <span class="mt-1 block text-xs text-stone-600">Vyplň jen pokud chceš heslo změnit (min. 6 znaků).</span>
+      </label>
+
+      <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Nová profilová fotka (volitelné)</span>
         <input type="file" accept="image/*" class="w-full rounded border border-stone-300 p-2" @change="onFileChange" />
       </label>
@@ -68,6 +81,7 @@ const authHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefin
 const shortName = ref("");
 const bio = ref("");
 const contact = ref("");
+const newPassword = ref("");
 const photoFile = ref<File | null>(null);
 const loading = ref(false);
 const error = ref("");
@@ -133,6 +147,9 @@ const submit = async () => {
     form.append("shortName", shortName.value);
     form.append("bio", bio.value);
     form.append("contact", contact.value);
+    if (newPassword.value.length > 0) {
+      form.append("newPassword", newPassword.value);
+    }
     if (photoFile.value) {
       form.append("profilePhoto", photoFile.value);
     }
@@ -150,6 +167,7 @@ const submit = async () => {
     if (isEditingOwnProfile.value) {
       await auth.refresh();
     }
+    newPassword.value = "";
     success.value = true;
   } catch (err: any) {
     error.value = err?.data?.statusMessage || "Nepodařilo se uložit profil.";

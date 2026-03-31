@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { createError, readMultipartFormData } from "h3";
 import { existsSync, unlinkSync } from "node:fs";
+import bcrypt from "bcryptjs";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { users } from "~~/server/db/schema";
 import { requireUser } from "~~/server/utils/auth";
@@ -9,7 +10,7 @@ import {
   processAndStoreImage,
   validateImageInput
 } from "~~/server/utils/uploads";
-import { editProfileSchema } from "~~/server/utils/validation";
+import { editProfileSchema, passwordSchema } from "~~/server/utils/validation";
 
 export default defineEventHandler(async (event) => {
   const authUser = await requireUser(event);
@@ -32,6 +33,13 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: parsed.error.issues[0]?.message || "Neplatná data profilu."
+    });
+  }
+  const parsedPassword = passwordSchema.optional().safeParse(fields.newPassword);
+  if (!parsedPassword.success) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: parsedPassword.error.issues[0]?.message || "Neplatné nové heslo."
     });
   }
 
@@ -67,6 +75,11 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  const nextPasswordHash =
+    parsedPassword.data && parsedPassword.data.length > 0
+      ? await bcrypt.hash(parsedPassword.data, 10)
+      : undefined;
+
   await db
     .update(users)
     .set({
@@ -74,6 +87,7 @@ export default defineEventHandler(async (event) => {
       bio: parsed.data.bio,
       contact: parsed.data.contact,
       profilePhotoPath: nextPhotoPath,
+      ...(nextPasswordHash ? { passwordHash: nextPasswordHash } : {}),
       updatedAt: Date.now()
     })
     .where(eq(users.id, authUser.id));

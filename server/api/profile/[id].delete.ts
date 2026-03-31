@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { createError, getRouterParam } from "h3";
 import { existsSync, unlinkSync } from "node:fs";
 import { getDb, ensureSchema } from "~~/server/db/client";
@@ -21,6 +21,19 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: "Admin si nemůže smazat vlastní profil."
+    });
+  }
+
+  const [firstUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .orderBy(asc(users.createdAt), asc(users.id))
+    .limit(1);
+
+  if (firstUser && firstUser.id === userId) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Prvního uživatele nemůže smazat jiný admin."
     });
   }
 

@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { createError, getRouterParam, readMultipartFormData } from "h3";
 import { existsSync, unlinkSync } from "node:fs";
+import bcrypt from "bcryptjs";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { users } from "~~/server/db/schema";
 import { isAdmin, requireUser } from "~~/server/utils/auth";
@@ -9,7 +10,7 @@ import {
   processAndStoreImage,
   validateImageInput
 } from "~~/server/utils/uploads";
-import { editProfileSchema } from "~~/server/utils/validation";
+import { editProfileSchema, passwordSchema } from "~~/server/utils/validation";
 
 export default defineEventHandler(async (event) => {
   const authUser = await requireUser(event);
@@ -41,6 +42,29 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: parsed.error.issues[0]?.message || "Neplatná data profilu."
+    });
+  }
+  const parsedPassword = passwordSchema.optional().safeParse(fields.newPassword);
+  if (!parsedPassword.success) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: parsedPassword.error.issues[0]?.message || "Neplatné nové heslo."
+    });
+  }
+  const nextPassword = parsedPassword.data ?? "";
+  const wantsPasswordChange = nextPassword.length > 0;
+
+  const [firstUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .orderBy(asc(users.createdAt), asc(users.id))
+    .limit(1);
+  const isFirstUser = Boolean(firstUser && firstUser.id === userId);
+
+  if (isFirstUser && authUser.id !== userId && wantsPasswordChange) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Prvnímu uživateli může heslo změnit jen jeho vlastník."
     });
   }
 
@@ -77,6 +101,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  const nextPasswordHash = wantsPasswordChange
+    ? await bcrypt.hash(nextPassword, 10)
+    : undefined;
+
   await db
     .update(users)
     .set({
@@ -84,6 +112,7 @@ export default defineEventHandler(async (event) => {
       bio: parsed.data.bio,
       contact: parsed.data.contact,
       profilePhotoPath: nextPhotoPath,
+      ...(nextPasswordHash ? { passwordHash: nextPasswordHash } : {}),
       updatedAt: Date.now()
     })
     .where(eq(users.id, userId));

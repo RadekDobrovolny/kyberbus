@@ -250,8 +250,11 @@ defineEmits<{
   remove: [FeedItem];
 }>();
 
-const isLepik = computed(() => props.item.type === "LEPIK");
-const isInstax = computed(() => props.item.type === "INSTAX");
+const hasImage = computed(() => Boolean(props.item.imagePath));
+const isInstax = computed(
+  () => props.item.type === "INSTAX" || (props.item.type === "LEPIK" && hasImage.value)
+);
+const isLepik = computed(() => props.item.type === "LEPIK" && !hasImage.value);
 const isAnnouncement = computed(() => props.item.type === "DISPECINK");
 const isKdo = computed(() => props.item.type === "KDO");
 const isMesto = computed(() => props.item.type === "MESTO");
