@@ -21,7 +21,8 @@ export default defineNuxtConfig({
     sqlitePath: process.env.SQLITE_PATH || "./data/kyberbus.sqlite",
     uploadsDir: process.env.UPLOADS_DIR || "./uploads",
     public: {
-      appName: "Kyberbus"
+      appName: "Kyberbus",
+      umamiWebsiteId: process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID || ""
     }
   },
   nitro: {

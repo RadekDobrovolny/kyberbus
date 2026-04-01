@@ -99,6 +99,20 @@ import {
 } from "@heroicons/vue/24/outline";
 
 const auth = useAuth();
+const runtimeConfig = useRuntimeConfig();
+const umamiWebsiteId = String(runtimeConfig.public.umamiWebsiteId || "").trim();
+
+if (umamiWebsiteId) {
+  useHead({
+    script: [
+      {
+        defer: true,
+        src: "https://umami.hippou.cz/script.js",
+        "data-website-id": umamiWebsiteId
+      }
+    ]
+  });
+}
 
 const mediaUrl = (path: string) => `/api/media/${path}`;
 
