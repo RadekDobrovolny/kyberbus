@@ -4,25 +4,31 @@
       class="fixed left-0 right-0 top-0 z-50 border-b border-stone-300 bg-stone-100 transition-transform duration-300 ease-out md:translate-y-0"
       :class="isHeaderHidden ? '-translate-y-full' : 'translate-y-0'"
     >
-      <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <div class="min-w-0">
+      <div class="relative mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <div class="flex items-center">
           <NuxtLink
-            v-if="auth.loaded.value && auth.user.value"
-            :to="`/profile/${auth.user.value.id}`"
-            class="flex items-center gap-2"
+            to="/"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-stone-300 bg-white p-1.5 shadow-pin transition-colors hover:bg-stone-100"
+            aria-label="Zpět na feed"
           >
-            <img
-              :src="mediaUrl(auth.user.value.profilePhotoPath)"
-              alt="Můj profil"
-              class="h-10 w-10 rounded-full border border-stone-300 object-cover"
-            />
-            <span class="truncate text-sm font-semibold text-stone-800">
-              {{ auth.user.value.shortName }}
-            </span>
+            <img src="/favicon.png" alt="Kyberbus" class="h-full w-full object-contain" />
           </NuxtLink>
-
-          <div v-else class="h-10 w-10 rounded-full border border-stone-300 bg-stone-200" />
         </div>
+
+        <NuxtLink
+          v-if="auth.loaded.value && auth.user.value"
+          :to="`/profile/${auth.user.value.id}`"
+          class="absolute left-1/2 flex max-w-[calc(100%-10rem)] -translate-x-1/2 items-center gap-2"
+        >
+          <img
+            :src="mediaUrl(auth.user.value.profilePhotoPath)"
+            alt="Můj profil"
+            class="h-10 w-10 rounded-full border border-stone-300 object-cover"
+          />
+          <span class="min-w-0 truncate text-sm font-semibold text-stone-800">
+            {{ auth.user.value.shortName }}
+          </span>
+        </NuxtLink>
 
         <nav class="flex items-center gap-3 text-sm">
           <template v-if="!auth.loaded.value">
@@ -47,10 +53,16 @@
             </button>
           </template>
           <template v-else>
-            <NuxtLink to="/login" class="font-medium text-stone-700 hover:text-stone-900">
+            <NuxtLink
+              to="/login"
+              class="inline-flex items-center justify-center rounded-full border border-stone-300 bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-800 shadow-pin transition-colors hover:bg-stone-200"
+            >
               Přihlášení
             </NuxtLink>
-            <NuxtLink to="/register" class="rounded bg-accent-500 px-3 py-1.5 font-semibold text-white">
+            <NuxtLink
+              to="/register"
+              class="inline-flex items-center justify-center rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)] transition-transform hover:scale-[1.01]"
+            >
               Registrace
             </NuxtLink>
           </template>

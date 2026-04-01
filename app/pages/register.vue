@@ -1,42 +1,83 @@
 <template>
   <section class="mx-auto max-w-xl rounded-xl border border-stone-300 bg-white p-6 shadow-pin">
-    <h1 class="mb-4 text-xl font-black text-stone-900">Registrace</h1>
+    <h1 class="mb-4 text-xl font-black text-stone-900">Palubní lístek</h1>
     <form class="space-y-4" @submit.prevent="submit">
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Přihlašovací jméno</span>
+        <span class="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+          <UserIcon class="h-4 w-4 text-stone-500" />
+          Přihlašovací jméno (login)
+        </span>
         <input v-model="login" class="w-full rounded border border-stone-300 p-2" required />
       </label>
 
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Heslo</span>
+        <span class="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+          <KeyIcon class="h-4 w-4 text-stone-500" />
+          Heslo
+        </span>
         <input v-model="password" type="password" class="w-full rounded border border-stone-300 p-2" required />
       </label>
 
+      <div class="relative py-1" aria-hidden="true">
+        <div class="h-0.5 w-full rounded-full bg-gradient-to-r from-accent-200 via-accent-500 to-accent-200" />
+      </div>
+
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Jméno</span>
-        <input v-model="shortName" class="w-full rounded border border-stone-300 p-2" maxlength="30" required />
+        <span class="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+          <IdentificationIcon class="h-4 w-4 text-stone-500" />
+          Jméno
+        </span>
+        <span class="mb-1 block text-xs text-stone-600">Jak vás ostatní uvidí v aplikaci (povinné pole)</span>
+        <input
+          v-model="shortName"
+          class="w-full rounded border border-stone-300 p-2"
+          maxlength="30"
+          placeholder="Jana Novotná"
+          required
+        />
         <span class="mt-1 block text-xs text-stone-600">{{ shortName.length }} / 30</span>
       </label>
 
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">O mně</span>
-        <textarea v-model="bio" class="min-h-20 w-full rounded border border-stone-300 p-2" maxlength="250" required />
+        <span class="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+          <ChatBubbleLeftRightIcon class="h-4 w-4 text-stone-500" />
+          O mně
+        </span>
+        <span class="mb-1 block text-xs text-stone-600">
+          Čemu se věnujete, proč jste vyrazili na expedici Kyberbusem? (nepovinné pole)
+        </span>
+        <textarea
+          v-model="bio"
+          class="min-h-20 w-full rounded border border-stone-300 p-2"
+          maxlength="250"
+          placeholder="Jsem studentka KISKu, věnuji se informačnímu designu služeb. Na CyberImpact Roadshow povedu workshop o bezpečném ukládání hesel. Ráda čtu absyntovky a mám kocoura Jonáše."
+        />
         <span class="mt-1 block text-xs text-stone-600">{{ bio.length }} / 250</span>
       </label>
 
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Kontakt</span>
+        <span class="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+          <AtSymbolIcon class="h-4 w-4 text-stone-500" />
+          Kontakt
+        </span>
+        <span class="mb-1 block text-xs text-stone-600">
+          Jak vás můžou ostatní účastníci kontaktovat? (nepovinné pole)
+        </span>
         <textarea
           v-model="contact"
           class="min-h-20 w-full rounded border border-stone-300 p-2"
           maxlength="100"
-          required
+          placeholder="Klidně mě oslovte přímo v autobusu anebo mi napište na Instagramu @ta.z.KISKu"
         />
         <span class="mt-1 block text-xs text-stone-600">{{ contact.length }} / 100</span>
       </label>
 
       <label class="block text-sm">
-        <span class="mb-1 block font-medium text-stone-700">Profilová fotka</span>
+        <span class="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+          <CameraIcon class="h-4 w-4 text-stone-500" />
+          Profilová fotka
+        </span>
+        <span class="mb-1 block text-xs text-stone-600">Povinný prvek</span>
         <input
           type="file"
           accept="image/*"
@@ -82,8 +123,14 @@
 
 <script setup lang="ts">
 import {
+  AtSymbolIcon,
   ArrowUturnLeftIcon,
-  PaperAirplaneIcon
+  CameraIcon,
+  ChatBubbleLeftRightIcon,
+  IdentificationIcon,
+  KeyIcon,
+  PaperAirplaneIcon,
+  UserIcon
 } from "@heroicons/vue/24/outline";
 
 definePageMeta({

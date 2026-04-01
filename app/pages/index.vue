@@ -15,10 +15,16 @@
       Web je určený pro komunitu kurzu. Registrace je otevřená, ale obsah je dostupný až po přihlášení.
     </p>
     <div class="flex justify-center gap-3">
-      <NuxtLink to="/register" class="rounded bg-accent-500 px-4 py-2 text-sm font-semibold text-white">
+      <NuxtLink
+        to="/register"
+        class="inline-flex items-center justify-center rounded-full bg-accent-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)] transition-transform hover:scale-[1.01]"
+      >
         Registrovat
       </NuxtLink>
-      <NuxtLink to="/login" class="rounded border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-800">
+      <NuxtLink
+        to="/login"
+        class="inline-flex items-center justify-center rounded-full border border-stone-300 bg-stone-100 px-5 py-2.5 text-sm font-semibold text-stone-800 shadow-pin transition-colors hover:bg-stone-200"
+      >
         Přihlásit
       </NuxtLink>
     </div>

@@ -1,6 +1,6 @@
 <template>
   <section class="mx-auto max-w-md rounded-xl border border-stone-300 bg-white p-6 shadow-pin">
-    <h1 class="mb-4 text-xl font-black text-stone-900">Přihlášení</h1>
+    <h1 class="mb-4 text-xl font-black text-stone-900">Nastoupení do Kyberbusu</h1>
     <form class="space-y-4" @submit.prevent="submit">
       <label class="block text-sm">
         <span class="mb-1 block font-medium text-stone-700">Přihlašovací jméno</span>
@@ -11,7 +11,10 @@
         <input v-model="password" type="password" class="w-full rounded border border-stone-300 p-2" required />
       </label>
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-      <button class="w-full rounded bg-accent-500 px-4 py-2 font-semibold text-white" :disabled="loading">
+      <button
+        class="inline-flex w-full items-center justify-center rounded-full bg-accent-500 px-6 py-3 text-base font-semibold text-white shadow-[0_10px_20px_rgba(45,108,223,0.35)] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+        :disabled="loading"
+      >
         {{ loading ? "Přihlašuji…" : "Přihlásit se" }}
       </button>
     </form>

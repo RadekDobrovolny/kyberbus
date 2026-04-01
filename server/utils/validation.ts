@@ -6,6 +6,8 @@ export const text250Schema = z
   .min(1, "Pole je povinné")
   .max(250, "Maximum je 250 znaků");
 
+export const optionalText250Schema = z.string().trim().max(250, "Maximum je 250 znaků");
+
 export const loginSchema = z
   .string()
   .trim()
@@ -22,8 +24,8 @@ export const registerPayloadSchema = z.object({
   login: loginSchema,
   password: passwordSchema,
   shortName: text250Schema,
-  bio: text250Schema,
-  contact: text250Schema
+  bio: optionalText250Schema,
+  contact: optionalText250Schema
 });
 
 export const loginPayloadSchema = z.object({
