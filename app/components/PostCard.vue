@@ -418,10 +418,6 @@ const instaxAngle = computed(() => {
   const angles = [-2, -1, 1, 2];
   return angles[hashId(props.item.id) % angles.length];
 });
-const mestoAngle = computed(() => {
-  const angles = [-1, 0, 1];
-  return angles[hashId(props.item.id) % angles.length];
-});
 
 const lepikColorClass = computed(
   () => lepikPalette[hashId(props.item.id) % lepikPalette.length]
@@ -453,10 +449,6 @@ const cardStyle = computed(() =>
     : isInstax.value
       ? {
           transform: `rotate(${instaxAngle.value}deg)`
-        }
-    : isMesto.value
-      ? {
-          transform: `rotate(${mestoAngle.value}deg)`
         }
     : undefined
 );
