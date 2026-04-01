@@ -1,71 +1,92 @@
-# Kyberbus MVP
+# Kyberbus
 
-Nuxt 3 aplikace podle `docs/prd.md`:
-- fullstack (`Nuxt 3` + server routes),
-- `TypeScript`,
-- `Tailwind CSS`,
-- `SQLite` + `Drizzle ORM`,
-- session-based auth (cookie, 1 týden),
-- upload fotek do Docker volume + image processing přes `Sharp`,
-- validace přes `Zod`,
-- nasazení přes `Docker Compose` + `Caddy`.
+Nuxt 4 aplikace podle `docs/prd.md`.
+
+## Stack
+
+- Nuxt 4 (fullstack, server routes)
+- TypeScript
+- Tailwind CSS
+- SQLite + Drizzle ORM
+- Session auth přes cookie
+- Upload a processing obrázků (Sharp + HEIC konverze)
+- Docker Compose + Caddy
 
 ## Lokální vývoj
 
 1. Nainstaluj závislosti:
    - `npm install`
-2. Spusť dev server:
+2. Vytvoř `.env` podle `.env.example`.
+3. Spusť dev server:
    - `npm run dev`
-3. Otevři:
+4. Otevři:
    - `http://localhost:3000`
 
-`SQLITE_PATH` a `UPLOADS_DIR` lze změnit v `.env` (viz `.env.example`).
+### Důležité env proměnné
 
-### Seed demo dat
+- `SQLITE_PATH` (default `./data/kyberbus.sqlite`)
+- `UPLOADS_DIR` (default `./uploads`)
+- `SESSION_COOKIE_SECURE` (`auto`, `true`, `false`)
+- `NUXT_PUBLIC_UMAMI_WEBSITE_ID` (volitelné; když je vyplněné, vloží se Umami script)
+
+## Seed demo dat
 
 - Spuštění:
   - `npm run seed`
 - Vytvoří:
-  - 5 uživatelů (`user1` až `user5`),
-  - každý má 1x `Instax` a 1x `Lepík` příspěvek.
+  - 5 uživatelů (`user1` až `user5`)
+  - každý má 1x Instax a 1x Lepík
 - Heslo pro všechny seed účty:
   - `test1234`
 
 ## Docker nasazení
 
-1. Build a spuštění:
+1. Build + start:
    - `docker compose up -d --build`
 2. Aplikace poběží přes Caddy na:
    - `http://localhost:3004`
-3. Volitelně Adminer na:
+3. Volitelně Adminer:
    - `http://localhost:8080`
 
 Persistovaná data:
-- SQLite soubor: volume `sqlite_data`,
-- uploadované fotky: volume `uploads_data`.
+- SQLite: volume `sqlite_data`
+- Uploady: volume `uploads_data`
 
 ### Adminer (SQLite)
 
-- V Admineru zvol:
-  - `System`: `SQLite 3`
-  - `Database`: `/db/kyberbus.sqlite`
-- Adminer kontejner má přimountovaný stejný `sqlite_data` volume jako aplikace, takže můžeš data upravovat přímo.
+- `System`: `SQLite 3`
+- `Database`: `/db/kyberbus.sqlite`
 
-## Co je implementováno z PRD
+## Implementované funkce
 
-- Otevřená registrace bez pozvánky/kódu.
-- Přístup k obsahu jen po přihlášení.
-- Registrace a profil s limity 250 znaků (`krátké jméno`, `bio`, `kontakt`).
-- Feed od nejnovějších, dávky 30 položek.
-- Typy příspěvků `Instax` (foto + text max 50) a `Lepík` (text max 200).
-- Uploady převáděné na `webp`, max šířka 1000 px.
-- EXIF/GPS metadata zachována (`Sharp.withMetadata()`).
-- Proklik na profil autora.
-- Úprava/smazání vlastních příspěvků.
-- Editace vlastního profilu včetně profilové fotky.
+- Otevřená registrace, přihlášení/odhlášení, session cookie.
+- Feed od nejnovějších + stránkování (`Načíst další`), realtime refresh (SSE + polling fallback).
+- Typy příspěvků:
+  - `INSTAX` (foto + krátký text)
+  - `LEPIK` (text)
+  - `DISPECINK` (oznámení, `INFO`/`IMPORTANT`)
+  - `KDO` (otázka + hlášení účasti)
+  - `MESTO` (admin-only stylizovaný typ)
+- Reakce na příspěvky (`❤️`, `😄`, `🚀`).
+- Prokliky v textu (klikatelné URL) u Lepíků i Oznámení.
+- Profil uživatele:
+  - editace údajů a profilové fotky
+  - volitelná změna hesla při editaci
+- Admin sekce (`/busadmin`):
+  - přehled uživatelů
+  - změna role
+  - smazání účtu
+  - zobrazení poslední aktivity uživatele
+- Ochrana prvního účtu:
+  - jiný admin mu nemůže změnit heslo
+  - jiný admin ho nemůže smazat
+- Umami analytics:
+  - script se vloží pouze pokud je vyplněné `NUXT_PUBLIC_UMAMI_WEBSITE_ID`
 
-## Poznámka k přihlášení
+## Poznámka k autentizaci
 
-PRD neobsahovalo konkrétní přihlašovací identifikátor/heslo. Implementace proto používá:
-- `přihlašovací jméno` (`login`) + `heslo` pro autentizaci,
-- profilová pole dle PRD (`krátké jméno`, `bio`, `kontakt`, `profilová fotka`).
+Přihlášení je přes `login` + `heslo`.  
+Session cookie se chová podle `SESSION_COOKIE_SECURE`:
+- `auto`: rozhodnutí podle protokolu/proxy
+- `true`: jen HTTPS
+- `false`: i HTTP

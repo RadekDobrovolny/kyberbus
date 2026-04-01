@@ -1,6 +1,9 @@
 <template>
   <div class="relative min-h-screen bg-gradient-to-b from-stone-100 via-stone-200 to-stone-100">
-    <header class="fixed left-0 right-0 top-0 z-50 border-b border-stone-300 bg-stone-100">
+    <header
+      class="fixed left-0 right-0 top-0 z-50 border-b border-stone-300 bg-stone-100 transition-transform duration-300 ease-out md:translate-y-0"
+      :class="isHeaderHidden ? '-translate-y-full' : 'translate-y-0'"
+    >
       <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         <div class="min-w-0">
           <NuxtLink
@@ -101,6 +104,10 @@ import {
 const auth = useAuth();
 const runtimeConfig = useRuntimeConfig();
 const umamiWebsiteId = String(runtimeConfig.public.umamiWebsiteId || "").trim();
+const isHeaderHidden = ref(false);
+const headerHideThreshold = 80;
+const headerDeltaThreshold = 8;
+let lastScrollY = 0;
 
 if (umamiWebsiteId) {
   useHead({
@@ -120,4 +127,33 @@ const handleLogout = async () => {
   await auth.logout();
   await navigateTo("/login");
 };
+
+const handleScroll = () => {
+  const currentScrollY = window.scrollY;
+  if (currentScrollY <= headerHideThreshold) {
+    isHeaderHidden.value = false;
+    lastScrollY = currentScrollY;
+    return;
+  }
+
+  const delta = currentScrollY - lastScrollY;
+  if (delta > headerDeltaThreshold) {
+    isHeaderHidden.value = true;
+  } else if (delta < -headerDeltaThreshold) {
+    isHeaderHidden.value = false;
+  }
+
+  lastScrollY = currentScrollY;
+};
+
+if (import.meta.client) {
+  onMounted(() => {
+    lastScrollY = window.scrollY;
+    window.addEventListener("scroll", handleScroll, { passive: true });
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener("scroll", handleScroll);
+  });
+}
 </script>
