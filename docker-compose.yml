@@ -7,6 +7,7 @@ services:
     environment:
       SQLITE_PATH: /app/data/kyberbus.sqlite
       UPLOADS_DIR: /app/uploads
+      NUXT_PUBLIC_UMAMI_WEBSITE_ID: ${NUXT_PUBLIC_UMAMI_WEBSITE_ID:-}
     volumes:
       - sqlite_data:/app/data
       - uploads_data:/app/uploads
