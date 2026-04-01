@@ -40,8 +40,12 @@
     </div>
 
     <div v-if="nextCursor" class="mt-4 text-center">
-      <button class="rounded border border-stone-400 px-4 py-2 text-sm font-medium text-stone-800" @click="loadMore">
-        Načíst další
+      <button
+        class="inline-flex items-center justify-center rounded-full border border-stone-300 bg-stone-100 px-5 py-2.5 text-sm font-semibold text-stone-800 shadow-pin transition-colors hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-65"
+        :disabled="loading"
+        @click="loadMore"
+      >
+        {{ loading ? "Načítám…" : "Načíst další" }}
       </button>
     </div>
 
@@ -82,6 +86,12 @@ const scrollTopThresholdPx = 320;
 let feedStream: EventSource | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
+type FetchFeedOptions = {
+  silent?: boolean;
+  mergeWithExisting?: boolean;
+  preserveCursor?: boolean;
+};
+
 const updateScrollTopBubbleVisibility = () => {
   if (!import.meta.client) {
     return;
@@ -93,7 +103,27 @@ const handleWindowScroll = () => {
   updateScrollTopBubbleVisibility();
 };
 
-const fetchFeed = async (cursor?: string, options?: { silent?: boolean }) => {
+const mergeFeedItems = (head: FeedItem[], tail: FeedItem[]) => {
+  const seen = new Set<string>();
+  const merged: FeedItem[] = [];
+  for (const item of head) {
+    if (seen.has(item.id)) {
+      continue;
+    }
+    seen.add(item.id);
+    merged.push(item);
+  }
+  for (const item of tail) {
+    if (seen.has(item.id)) {
+      continue;
+    }
+    seen.add(item.id);
+    merged.push(item);
+  }
+  return merged;
+};
+
+const fetchFeed = async (cursor?: string, options?: FetchFeedOptions) => {
   const silent = Boolean(options?.silent);
   if (!silent) {
     loading.value = true;
@@ -109,11 +139,18 @@ const fetchFeed = async (cursor?: string, options?: { silent?: boolean }) => {
     );
 
     if (!cursor) {
-      items.value = result.items;
+      if (options?.mergeWithExisting && items.value.length > 0) {
+        items.value = mergeFeedItems(result.items, items.value);
+      } else {
+        items.value = result.items;
+      }
+      if (!options?.preserveCursor) {
+        nextCursor.value = result.nextCursor;
+      }
     } else {
-      items.value = [...items.value, ...result.items];
+      items.value = mergeFeedItems(items.value, result.items);
+      nextCursor.value = result.nextCursor;
     }
-    nextCursor.value = result.nextCursor;
   } finally {
     if (!silent) {
       loading.value = false;
@@ -127,7 +164,11 @@ const refreshFromRealtime = async () => {
   }
   realtimeRefreshing.value = true;
   try {
-    await fetchFeed(undefined, { silent: true });
+    await fetchFeed(undefined, {
+      silent: true,
+      mergeWithExisting: true,
+      preserveCursor: true
+    });
   } finally {
     realtimeRefreshing.value = false;
   }
@@ -164,7 +205,18 @@ const startFeedStream = () => {
   }
 
   feedStream = new EventSource("/api/feed/stream");
-  feedStream.addEventListener("feed-update", () => {
+  feedStream.addEventListener("feed-update", (event) => {
+    const data = event instanceof MessageEvent ? String(event.data || "") : "";
+    if (data.length > 0) {
+      try {
+        const parsed = JSON.parse(data) as { kind?: string; postId?: string };
+        if (parsed.kind === "deleted" && parsed.postId) {
+          items.value = items.value.filter((item) => item.id !== parsed.postId);
+        }
+      } catch {
+        // Ignoruj neplatný payload a proveď refresh.
+      }
+    }
     void refreshFromRealtime();
   });
   feedStream.onerror = () => {
