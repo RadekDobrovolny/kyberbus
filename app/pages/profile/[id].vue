@@ -65,6 +65,7 @@
           :key="post.id"
           :item="post"
           :editable="false"
+          @open-image="openImageModal"
         />
         <p v-if="mappedPosts.length === 0" class="text-sm text-stone-700">Autor zatím nic nepřidal.</p>
       </div>
@@ -72,6 +73,30 @@
 
     <p v-else class="text-sm text-red-600">Profil nebyl nalezen.</p>
   </section>
+
+  <Teleport to="body">
+    <div
+      v-if="activeImage"
+      class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4"
+      @click="closeImageModal"
+    >
+      <div class="relative max-h-[92vh] w-full max-w-5xl" @click.stop>
+        <button
+          type="button"
+          class="absolute right-2 top-2 rounded-full bg-black/55 p-2 text-white"
+          aria-label="Zavřít fotku"
+          @click="closeImageModal"
+        >
+          <XMarkIcon class="h-6 w-6" />
+        </button>
+        <img
+          :src="activeImageUrl"
+          alt="Instax fotografie - detail"
+          class="max-h-[92vh] w-full rounded object-contain"
+        />
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -79,7 +104,8 @@ import {
   ArrowUturnLeftIcon,
   PencilSquareIcon,
   ShieldCheckIcon,
-  TrashIcon
+  TrashIcon,
+  XMarkIcon
 } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
 import type { KdoParticipant } from "~~/shared/kdo";
@@ -122,6 +148,12 @@ const profile = ref<ProfileResponse["profile"] | null>(null);
 const posts = ref<ProfileResponse["posts"]>([]);
 const actionLoading = ref(false);
 const actionError = ref("");
+const activeImage = ref<{ path: string; updatedAt: number } | null>(null);
+const activeImageUrl = computed(() =>
+  activeImage.value
+    ? `/api/media/${activeImage.value.path}?v=${activeImage.value.updatedAt}`
+    : ""
+);
 
 const isOwnProfile = computed(
   () => Boolean(auth.user.value && profile.value && auth.user.value.id === profile.value.id)
@@ -150,6 +182,17 @@ const mappedPosts = computed<FeedItem[]>(() =>
 );
 
 const mediaUrl = (path: string) => `/api/media/${path}`;
+
+const openImageModal = (post: FeedItem) => {
+  if (!post.imagePath) {
+    return;
+  }
+  activeImage.value = { path: post.imagePath, updatedAt: post.updatedAt };
+};
+
+const closeImageModal = () => {
+  activeImage.value = null;
+};
 
 const fetchProfile = async () => {
   loading.value = true;

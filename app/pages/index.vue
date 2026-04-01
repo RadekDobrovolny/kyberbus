@@ -31,6 +31,7 @@
       :item="item"
       :editable="canEditPost(item)"
       @edit="startEdit"
+      @open-image="openImageModal"
       @remove="removePost"
     />
 
@@ -68,10 +69,34 @@
       </button>
     </Transition>
   </section>
+
+  <Teleport to="body">
+    <div
+      v-if="activeImage"
+      class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4"
+      @click="closeImageModal"
+    >
+      <div class="relative max-h-[92vh] w-full max-w-5xl" @click.stop>
+        <button
+          type="button"
+          class="absolute right-2 top-2 rounded-full bg-black/55 p-2 text-white"
+          aria-label="Zavřít fotku"
+          @click="closeImageModal"
+        >
+          <XMarkIcon class="h-6 w-6" />
+        </button>
+        <img
+          :src="activeImageUrl"
+          alt="Instax fotografie - detail"
+          class="max-h-[92vh] w-full rounded object-contain"
+        />
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ArrowUpIcon } from "@heroicons/vue/24/outline";
+import { ArrowUpIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
 
 const auth = useAuth();
@@ -81,10 +106,16 @@ const nextCursor = ref<string | null>(null);
 const loading = ref(false);
 const realtimeRefreshing = ref(false);
 const showScrollTopBubble = ref(false);
+const activeImage = ref<{ path: string; updatedAt: number } | null>(null);
 const realtimePollMs = 5000;
 const scrollTopThresholdPx = 320;
 let feedStream: EventSource | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
+const activeImageUrl = computed(() =>
+  activeImage.value
+    ? `/api/media/${activeImage.value.path}?v=${activeImage.value.updatedAt}`
+    : ""
+);
 
 type FetchFeedOptions = {
   silent?: boolean;
@@ -236,6 +267,17 @@ const scrollToFeedTop = (smooth = true) => {
     return;
   }
   window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+};
+
+const openImageModal = (post: FeedItem) => {
+  if (!post.imagePath) {
+    return;
+  }
+  activeImage.value = { path: post.imagePath, updatedAt: post.updatedAt };
+};
+
+const closeImageModal = () => {
+  activeImage.value = null;
 };
 
 const startEdit = (post: FeedItem) => {

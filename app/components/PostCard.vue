@@ -30,7 +30,7 @@
           type="button"
           class="block w-full"
           aria-label="Otevřít fotku"
-          @click="openImageModal"
+          @click="$emit('open-image', item)"
         >
           <img
             :src="mediaUrl(item.imagePath, item.updatedAt)"
@@ -220,30 +220,6 @@
       </div>
     </div>
   </article>
-
-  <Teleport to="body">
-    <div
-      v-if="isImageModalOpen && item.imagePath"
-      class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4"
-      @click="closeImageModal"
-    >
-      <div class="relative max-h-[92vh] w-full max-w-5xl" @click.stop>
-        <button
-          type="button"
-          class="absolute right-2 top-2 rounded-full bg-black/55 p-2 text-white"
-          aria-label="Zavřít fotku"
-          @click="closeImageModal"
-        >
-          <XMarkIcon class="h-6 w-6" />
-        </button>
-        <img
-          :src="mediaUrl(item.imagePath, item.updatedAt)"
-          alt="Instax fotografie - detail"
-          class="max-h-[92vh] w-full rounded object-contain"
-        />
-      </div>
-    </div>
-  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -251,8 +227,7 @@ import {
   MegaphoneIcon,
   PencilSquareIcon,
   QuestionMarkCircleIcon,
-  TrashIcon,
-  XMarkIcon
+  TrashIcon
 } from "@heroicons/vue/24/outline";
 import type { FeedItem } from "~/types/models";
 import type { KdoParticipant } from "~~/shared/kdo";
@@ -273,6 +248,7 @@ const props = defineProps<{
 defineEmits<{
   edit: [FeedItem];
   remove: [FeedItem];
+  "open-image": [FeedItem];
 }>();
 
 const hasImage = computed(() => Boolean(props.item.imagePath));
@@ -289,7 +265,6 @@ const isImportantAnnouncement = computed(
 type LepikTextSegment =
   | { kind: "text"; value: string }
   | { kind: "link"; value: string; href: string };
-const isImageModalOpen = ref(false);
 const pendingKdoToggle = ref(false);
 const reactionButtons: Array<{ type: ReactionType; key: ReactionKey; emoji: string }> = [
   { type: "HEART", key: "heart", emoji: "❤️" },
@@ -559,17 +534,6 @@ const toggleKdoHand = async () => {
   } finally {
     pendingKdoToggle.value = false;
   }
-};
-
-const openImageModal = () => {
-  if (!props.item.imagePath) {
-    return;
-  }
-  isImageModalOpen.value = true;
-};
-
-const closeImageModal = () => {
-  isImageModalOpen.value = false;
 };
 
 const formatDate = (stamp: number) =>
