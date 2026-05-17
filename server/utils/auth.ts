@@ -1,4 +1,4 @@
-import { and, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { randomBytes, createHash } from "node:crypto";
 import type { H3Event } from "h3";
 import { createError, deleteCookie, getCookie, setCookie } from "h3";
@@ -151,6 +151,45 @@ export const requireAdmin = async (event: H3Event) => {
   const user = await requireUser(event);
   if (!isAdmin(user)) {
     throw createError({ statusCode: 403, statusMessage: "Tato akce je pouze pro admina." });
+  }
+  return user;
+};
+
+export const getSuperadmin = async () => {
+  ensureSchema();
+  const db = getDb();
+  const [superadmin] = await db
+    .select({
+      id: users.id,
+      login: users.login,
+      role: users.role,
+      shortName: users.shortName,
+      bio: users.bio,
+      contact: users.contact,
+      profilePhotoPath: users.profilePhotoPath,
+      createdAt: users.createdAt,
+      lastActiveAt: users.lastActiveAt
+    })
+    .from(users)
+    .where(eq(users.role, "ADMIN"))
+    .orderBy(asc(users.createdAt), asc(users.id))
+    .limit(1);
+
+  return superadmin || null;
+};
+
+export const isSuperadmin = async (user: { id: string; role?: string | null }) => {
+  if (!isAdmin(user)) {
+    return false;
+  }
+  const superadmin = await getSuperadmin();
+  return Boolean(superadmin && superadmin.id === user.id);
+};
+
+export const requireSuperadmin = async (event: H3Event) => {
+  const user = await requireAdmin(event);
+  if (!(await isSuperadmin(user))) {
+    throw createError({ statusCode: 403, statusMessage: "Tato akce je pouze pro superadmina." });
   }
   return user;
 };

@@ -1,6 +1,6 @@
 import type { EventStream } from "h3";
 
-type FeedUpdateKind = "created" | "updated" | "deleted";
+type FeedUpdateKind = "created" | "updated" | "deleted" | "cleared";
 
 declare global {
   // eslint-disable-next-line no-var

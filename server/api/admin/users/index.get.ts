@@ -1,10 +1,10 @@
 import { desc } from "drizzle-orm";
 import { getDb, ensureSchema } from "~~/server/db/client";
 import { users } from "~~/server/db/schema";
-import { requireAdmin } from "~~/server/utils/auth";
+import { isSuperadmin, requireAdmin } from "~~/server/utils/auth";
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event);
+  const admin = await requireAdmin(event);
   ensureSchema();
   const db = getDb();
 
@@ -24,5 +24,8 @@ export default defineEventHandler(async (event) => {
     .from(users)
     .orderBy(desc(users.createdAt));
 
-  return { users: rows };
+  return {
+    users: rows,
+    isSuperadmin: await isSuperadmin(admin)
+  };
 });

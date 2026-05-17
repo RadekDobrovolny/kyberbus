@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Roboto+Condensed:wght@200;400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Patrick+Hand&family=Roboto+Condensed:wght@200;400;500;700&subset=latin-ext&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -29,6 +29,12 @@ body {
 .gloria-hallelujah-bold {
   font-family: "Gloria Hallelujah", cursive;
   font-weight: 700;
+  font-style: normal;
+}
+
+.patrick-hand-regular {
+  font-family: "Patrick Hand", cursive;
+  font-weight: 300;
   font-style: normal;
 }
 

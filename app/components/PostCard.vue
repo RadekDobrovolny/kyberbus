@@ -148,7 +148,7 @@
               Zatím nikdo.
             </p>
             <p v-else class="mt-3 text-sm font-medium text-stone-800">
-              {{ kdoParticipantsList }}
+              {{ kdoParticipantsCount }}: {{ kdoParticipantsList }}
             </p>
           </div>
         </div>
@@ -166,7 +166,7 @@
           </NuxtLink>
             <span class="text-xs text-stone-600">{{ formatDate(item.createdAt) }}</span>
         </div>
-        <p class="gloria-hallelujah-regular flex-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-xl leading-snug text-stone-800/95">
+        <p class="patrick-hand-regular flex-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[1.375rem] leading-snug text-stone-800/95">
           <template v-for="(segment, index) in textContentSegments" :key="`lepik-${segment.kind}-${index}`">
             <a
               v-if="segment.kind === 'link'"
@@ -285,6 +285,7 @@ const reactionState = ref<{
 });
 const kdoParticipantsState = ref<KdoParticipant[]>([]);
 const viewerJoinedKdoState = ref(false);
+const kdoParticipantsCount = computed(() => kdoParticipantsState.value.length);
 const kdoParticipantsList = computed(() =>
   kdoParticipantsState.value.map((participant) => participant.shortName).join(", ")
 );

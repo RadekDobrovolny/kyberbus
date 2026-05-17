@@ -247,6 +247,12 @@ const startFeedStream = () => {
     if (data.length > 0) {
       try {
         const parsed = JSON.parse(data) as { kind?: string; postId?: string };
+        if (parsed.kind === "cleared") {
+          items.value = [];
+          nextCursor.value = null;
+          activeImage.value = null;
+          return;
+        }
         if (parsed.kind === "deleted" && parsed.postId) {
           items.value = items.value.filter((item) => item.id !== parsed.postId);
         }
