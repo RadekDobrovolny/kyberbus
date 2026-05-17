@@ -38,7 +38,7 @@
             class="aspect-square w-full rounded-sm border border-stone-300 object-cover"
           />
         </button>
-        <p class="gloria-hallelujah-bold mt-4 min-h-14 whitespace-pre-wrap text-xl leading-snug text-stone-800">
+        <p class="patrick-hand-regular mt-4 min-h-14 whitespace-pre-wrap text-[1.375rem] leading-snug text-stone-800">
           {{ item.textContent }}
         </p>
       </template>
