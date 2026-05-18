@@ -21,7 +21,7 @@
           class="absolute left-1/2 flex max-w-[calc(100%-10rem)] -translate-x-1/2 items-center gap-2"
         >
           <img
-            :src="mediaUrl(auth.user.value.profilePhotoPath)"
+            :src="mediaUrl(auth.user.value.profilePhotoPath, auth.user.value.updatedAt)"
             alt="Můj profil"
             class="h-10 w-10 rounded-full border border-stone-300 object-cover"
           />
@@ -133,7 +133,8 @@ if (umamiWebsiteId) {
   });
 }
 
-const mediaUrl = (path: string) => `/api/media/${path}`;
+const mediaUrl = (path: string, version?: number) =>
+  version ? `/api/media/${path}?v=${version}` : `/api/media/${path}`;
 
 const handleLogout = async () => {
   await auth.logout();

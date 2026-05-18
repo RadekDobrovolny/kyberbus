@@ -11,6 +11,7 @@ export type AuthUser = {
   contact: string;
   profilePhotoPath: string;
   createdAt: number;
+  updatedAt: number;
 };
 
 export type FeedItem = {
@@ -24,6 +25,7 @@ export type FeedItem = {
   authorId: string;
   authorShortName: string;
   authorPhotoPath: string;
+  authorUpdatedAt: number;
   reactions: ReactionCounts;
   viewerReactions: ViewerReactions;
   kdoParticipants: KdoParticipant[];

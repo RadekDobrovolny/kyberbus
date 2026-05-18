@@ -28,7 +28,7 @@
         </div>
         <div class="flex items-start gap-4">
           <img
-            :src="mediaUrl(profile.profilePhotoPath)"
+            :src="mediaUrl(profile.profilePhotoPath, profile.updatedAt)"
             alt="Profilová fotka"
             class="h-20 w-20 rounded-full border border-stone-300 object-cover"
           />
@@ -154,6 +154,7 @@ type ProfileResponse = {
     contact: string;
     profilePhotoPath: string;
     createdAt: number;
+    updatedAt: number;
   };
   posts: Array<{
     id: string;
@@ -207,11 +208,13 @@ const mappedPosts = computed<FeedItem[]>(() =>
     ...post,
     authorId: profile.value?.id || "",
     authorShortName: profile.value?.shortName || "",
-    authorPhotoPath: profile.value?.profilePhotoPath || ""
+    authorPhotoPath: profile.value?.profilePhotoPath || "",
+    authorUpdatedAt: profile.value?.updatedAt || 0
   }))
 );
 
-const mediaUrl = (path: string) => `/api/media/${path}`;
+const mediaUrl = (path: string, version?: number) =>
+  version ? `/api/media/${path}?v=${version}` : `/api/media/${path}`;
 
 const openImageModal = (post: FeedItem) => {
   if (!post.imagePath) {

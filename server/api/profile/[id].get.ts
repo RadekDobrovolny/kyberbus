@@ -25,7 +25,8 @@ export default defineEventHandler(async (event) => {
       bio: users.bio,
       contact: users.contact,
       profilePhotoPath: users.profilePhotoPath,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt
     })
     .from(users)
     .where(eq(users.id, id))

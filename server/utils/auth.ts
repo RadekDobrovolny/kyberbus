@@ -112,7 +112,8 @@ export const getCurrentUser = async (event: H3Event) => {
       contact: users.contact,
       profilePhotoPath: users.profilePhotoPath,
       createdAt: users.createdAt,
-      lastActiveAt: users.lastActiveAt
+      lastActiveAt: users.lastActiveAt,
+      updatedAt: users.updatedAt
     })
     .from(users)
     .where(eq(users.id, session.userId))

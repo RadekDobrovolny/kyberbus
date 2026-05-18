@@ -16,7 +16,8 @@
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
             <img
-              :src="mediaUrl(item.authorPhotoPath)"
+              :key="`${item.authorPhotoPath}-${item.authorUpdatedAt}`"
+              :src="mediaUrl(item.authorPhotoPath, item.authorUpdatedAt)"
               alt="Profil autora"
               class="h-9 w-9 rounded-full border border-stone-300 object-cover"
             />
@@ -33,6 +34,7 @@
           @click="$emit('open-image', item)"
         >
           <img
+            :key="`${item.imagePath}-${item.updatedAt}`"
             :src="mediaUrl(item.imagePath, item.updatedAt)"
             alt="Instax fotografie"
             class="aspect-square w-full rounded-sm border border-stone-300 object-cover"
@@ -55,7 +57,8 @@
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
             <img
-              :src="mediaUrl(item.authorPhotoPath)"
+              :key="`${item.authorPhotoPath}-${item.authorUpdatedAt}`"
+              :src="mediaUrl(item.authorPhotoPath, item.authorUpdatedAt)"
               alt="Profil autora"
               class="h-9 w-9 rounded-full border border-stone-300 object-cover"
             />
@@ -111,7 +114,8 @@
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
             <img
-              :src="mediaUrl(item.authorPhotoPath)"
+              :key="`${item.authorPhotoPath}-${item.authorUpdatedAt}`"
+              :src="mediaUrl(item.authorPhotoPath, item.authorUpdatedAt)"
               alt="Profil autora"
               class="h-9 w-9 rounded-full border border-stone-300 object-cover"
             />
@@ -158,7 +162,8 @@
         <div class="mb-3 flex items-center justify-between gap-3">
           <NuxtLink :to="`/profile/${item.authorId}`" class="flex items-center gap-2">
             <img
-              :src="mediaUrl(item.authorPhotoPath)"
+              :key="`${item.authorPhotoPath}-${item.authorUpdatedAt}`"
+              :src="mediaUrl(item.authorPhotoPath, item.authorUpdatedAt)"
               alt="Profil autora"
               class="h-9 w-9 rounded-full border border-stone-300 object-cover"
             />

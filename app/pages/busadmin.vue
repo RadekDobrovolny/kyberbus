@@ -77,7 +77,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex min-w-0 items-center gap-3">
               <img
-                :src="mediaUrl(item.profilePhotoPath)"
+                :src="mediaUrl(item.profilePhotoPath, item.updatedAt)"
                 :alt="`Profilová fotka ${item.shortName}`"
                 class="h-12 w-12 rounded-full border border-stone-300 object-cover"
               />
@@ -186,7 +186,8 @@ const clearingPosts = ref(false);
 const clearPostsMessage = ref("");
 const clearPostsError = ref("");
 
-const mediaUrl = (path: string) => `/api/media/${path}`;
+const mediaUrl = (path: string, version?: number) =>
+  version ? `/api/media/${path}?v=${version}` : `/api/media/${path}`;
 const formatLastActive = (stamp: number | null) => {
   if (!stamp) {
     return "zatím nezaznamenána";

@@ -28,7 +28,8 @@ export default defineEventHandler(async (event) => {
       updatedAt: posts.updatedAt,
       authorId: users.id,
       authorShortName: users.shortName,
-      authorPhotoPath: users.profilePhotoPath
+      authorPhotoPath: users.profilePhotoPath,
+      authorUpdatedAt: users.updatedAt
     })
     .from(posts)
     .innerJoin(users, eq(posts.authorId, users.id))
